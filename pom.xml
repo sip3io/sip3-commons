@@ -82,7 +82,7 @@
     </dependencies>
 
     <build>
-        <finalName>sip3-captain-ce</finalName>
+        <finalName>sip3-commons</finalName>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
