@@ -22,13 +22,13 @@ import io.vertx.core.datagram.DatagramSocketOptions
 import io.vertx.core.json.JsonObject
 import org.junit.jupiter.api.Test
 
-class BootstrapTest : VertxTest() {
+class AbstractBootstrapTest : VertxTest() {
 
     @Test
     fun `Retrieve InfluxDB counters`() {
         runTest(
                 deploy = {
-                    vertx.deployTestVerticle(Bootstrap::class, config = JsonObject().apply {
+                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
                         put("metrics", JsonObject().apply {
                             put("influxdb", JsonObject().apply {
                                 put("uri", "http://127.0.0.1:8086")
@@ -55,7 +55,7 @@ class BootstrapTest : VertxTest() {
     fun `Retrieve Datadog counters`() {
         runTest(
                 deploy = {
-                    vertx.deployTestVerticle(Bootstrap::class, config = JsonObject().apply {
+                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
                         put("metrics", JsonObject().apply {
                             put("statsd", JsonObject().apply {
                                 put("host", "127.0.0.1")

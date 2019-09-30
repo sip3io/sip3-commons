@@ -44,7 +44,7 @@ import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
-class Bootstrap(private val configLocations: List<String>? = null) : AbstractVerticle() {
+open class AbstractBootstrap(private val configLocations: List<String>? = null) : AbstractVerticle() {
 
     private val logger = KotlinLogging.logger {}
 
@@ -67,7 +67,7 @@ class Bootstrap(private val configLocations: List<String>? = null) : AbstractVer
                 val config = asr.result().mergeIn(config())
                 logger.info("Configuration:\n ${config.encodePrettily()}")
                 deployMeterRegistries(config)
-                deployVerticles()
+                deployVerticles(config)
             }
         }
         configRetriever.listen { change ->
@@ -156,7 +156,7 @@ class Bootstrap(private val configLocations: List<String>? = null) : AbstractVer
         }
     }
 
-    open fun deployVerticles() {
+    open fun deployVerticles(config: JsonObject) {
         // Do nothing...
     }
 
