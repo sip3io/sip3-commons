@@ -73,7 +73,7 @@ class Bootstrap(private val configLocations: List<String>? = null) : AbstractVer
         configRetriever.listen { change ->
             val config = change.newConfiguration
             logger.info("Configuration:\n ${config.encodePrettily()}")
-            vertx.eventBus().send(Routes.config_change, config, USE_LOCAL_CODEC)
+            vertx.eventBus().publish(Routes.config_change, config, USE_LOCAL_CODEC)
         }
     }
 
