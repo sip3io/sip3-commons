@@ -44,7 +44,7 @@ import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
-open class AbstractBootstrap(private val configLocations: List<String>? = null) : AbstractVerticle() {
+open class AbstractBootstrap : AbstractVerticle() {
 
     private val logger = KotlinLogging.logger {}
 
@@ -52,6 +52,8 @@ open class AbstractBootstrap(private val configLocations: List<String>? = null) 
 
         val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
     }
+
+    open val configLocations = emptyList<String>()
 
     override fun start() {
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
@@ -77,7 +79,7 @@ open class AbstractBootstrap(private val configLocations: List<String>? = null) 
         }
     }
 
-    fun configRetrieverOptions(): ConfigRetrieverOptions {
+    private fun configRetrieverOptions(): ConfigRetrieverOptions {
         val configStoreOptions = mutableListOf<ConfigStoreOptions>()
         configStoreOptions.apply {
             var options = configStoreOptionsOf(
@@ -87,15 +89,14 @@ open class AbstractBootstrap(private val configLocations: List<String>? = null) 
                     config = JsonObject().put("path", "application.yml")
             )
             add(options)
-            configLocations?.forEach { configLocation ->
-                System.getProperty(configLocation)?.let { path ->
-                    options = configStoreOptionsOf(
-                            type = "file",
-                            format = "yaml",
-                            config = JsonObject().put("path", path)
-                    )
-                    add(options)
-                }
+            configLocations.mapNotNull { System.getProperty(it) }.forEach { path ->
+                options = configStoreOptionsOf(
+                        optional = true,
+                        type = "file",
+                        format = "yaml",
+                        config = JsonObject().put("path", path)
+                )
+                add(options)
             }
         }
         return configRetrieverOptionsOf(stores = configStoreOptions)
