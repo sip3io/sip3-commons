@@ -25,7 +25,7 @@ class IpUtilTest {
 
     @Test
     fun `Сonvert valid IPv4 address to Int`() {
-        val addr = InetAddress.getByName("23.08.20.15")
+        val addr = InetAddress.getByName("23.8.20.15")
         assertEquals(386405391, IpUtil.convertToInt(addr.address))
     }
 
@@ -34,6 +34,20 @@ class IpUtilTest {
         Assertions.assertThrows(UnsupportedOperationException::class.java) {
             val addr = byteArrayOf(0x01, 0x02, 0x03)
             IpUtil.convertToInt(addr)
+        }
+    }
+
+    @Test
+    fun `Convert valid IPV4 address to String`() {
+        val addr = InetAddress.getByName("23.8.20.15")
+        assertEquals("23.8.20.15", IpUtil.convertToString(addr.address))
+    }
+
+    @Test
+    fun `Convert invalid address to String`() {
+        Assertions.assertThrows(UnsupportedOperationException::class.java) {
+            val addr = byteArrayOf(0x01, 0x02, 0x03)
+            IpUtil.convertToString(addr)
         }
     }
 }

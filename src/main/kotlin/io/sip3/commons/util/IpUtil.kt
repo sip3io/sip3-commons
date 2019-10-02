@@ -29,4 +29,12 @@ object IpUtil {
         }
         return number
     }
+
+    fun convertToString(addr: ByteArray): String {
+        if (addr.size != 4) {
+            throw UnsupportedOperationException("Can't convert ${addr.size}bytes address to String")
+        }
+
+        return "${addr[0].toUByte()}.${addr[1].toUByte()}.${addr[2].toUByte()}.${addr[3].toUByte()}"
+    }
 }
