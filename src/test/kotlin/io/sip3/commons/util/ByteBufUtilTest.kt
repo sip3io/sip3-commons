@@ -20,6 +20,10 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import sun.font.CharToGlyphMapper
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.nio.charset.Charset
 
 class ByteBufUtilTest {
 
@@ -74,6 +78,17 @@ class ByteBufUtilTest {
     }
 
     @Test
+    fun `Write String as tlv`() {
+        val string = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
+
+        createBuffer(string, 3 + string.length).also { buffer ->
+            val actualBytes = ByteArray(string.length)
+            buffer.readBytes(actualBytes)
+            assertEquals(string, actualBytes.toString(Charset.defaultCharset()))
+        }
+    }
+
+    @Test
     fun `Write ByteArray as tlv`() {
         val byteArrayValue = byteArrayOf(0x08, 0x08, 0x08, 0x0C)
 
@@ -100,7 +115,7 @@ class ByteBufUtilTest {
     fun `Check write for unsupported value type`() {
         assertThrows(IllegalArgumentException::class.java) {
             Unpooled.buffer(1).apply {
-                writeTlv(TAG, "string value")
+                writeTlv(TAG, BigDecimal(999))
             }
         }
     }

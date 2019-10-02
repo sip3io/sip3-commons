@@ -17,6 +17,7 @@
 package io.sip3.commons.util
 
 import io.netty.buffer.ByteBuf
+import java.nio.charset.Charset
 
 fun ByteBuf.writeTlv(tag: Int, value: Any) {
     when (value) {
@@ -44,6 +45,12 @@ fun ByteBuf.writeTlv(tag: Int, value: Any) {
             writeByte(tag)
             writeShort(11)
             writeLong(value)
+        }
+        is String -> {
+            writeByte(tag)
+            val bytes = value.toByteArray(Charset.defaultCharset())
+            writeShort(3 + bytes.size)
+            writeBytes(bytes)
         }
         is ByteArray -> {
             writeByte(tag)
