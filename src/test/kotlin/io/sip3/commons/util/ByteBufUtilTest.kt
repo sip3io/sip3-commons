@@ -20,9 +20,7 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import sun.font.CharToGlyphMapper
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.nio.charset.Charset
 
 class ByteBufUtilTest {
@@ -79,12 +77,12 @@ class ByteBufUtilTest {
 
     @Test
     fun `Write String as tlv`() {
-        val string = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
+        val stringValue = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
 
-        createBuffer(string, 3 + string.length).also { buffer ->
-            val actualBytes = ByteArray(string.length)
+        createBuffer(stringValue, 3 + stringValue.length).also { buffer ->
+            val actualBytes = ByteArray(stringValue.length)
             buffer.readBytes(actualBytes)
-            assertEquals(string, actualBytes.toString(Charset.defaultCharset()))
+            assertEquals(stringValue, actualBytes.toString(Charset.defaultCharset()))
         }
     }
 
