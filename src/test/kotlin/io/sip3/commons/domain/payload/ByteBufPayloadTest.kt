@@ -29,7 +29,6 @@ class ByteBufPayloadTest {
         val encoded = payload.encode()
         assertEquals(buffer.capacity(), encoded.capacity())
 
-        val decoded = ByteBufPayload().apply { decode(encoded) }
-        assertEquals(buffer, decoded.buffer)
+        assertEquals(buffer, encoded)
     }
 }

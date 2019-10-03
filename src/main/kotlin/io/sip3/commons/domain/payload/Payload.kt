@@ -16,11 +16,7 @@
 
 package io.sip3.commons.domain.payload
 
-import io.netty.buffer.ByteBuf
-
-interface Payload {
-
-    fun encode(): ByteBuf
-
-    fun decode(byteBuf: ByteBuf)
-}
+/**
+ * Marker interface for generic payload
+ */
+interface Payload

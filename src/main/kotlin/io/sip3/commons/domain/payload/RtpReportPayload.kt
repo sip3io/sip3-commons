@@ -18,10 +18,11 @@ package io.sip3.commons.domain.payload
 
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
+import io.sip3.commons.util.remainingCapacity
 import io.sip3.commons.util.writeTlv
 import java.nio.charset.Charset
 
-class RtpReportPayload : Payload {
+class RtpReportPayload : Encodable, Decodable {
 
     companion object {
 
@@ -103,35 +104,31 @@ class RtpReportPayload : Payload {
         }
     }
 
-    override fun decode(byteBuf: ByteBuf) {
-        var offset = 0
-        while (offset < byteBuf.capacity()) {
+    override fun decode(buffer: ByteBuf) {
+        while (buffer.remainingCapacity() > 0) {
             // Type
-            val type = byteBuf.getByte(offset)
+            val type = buffer.readByte()
             // Length
-            offset += 1
-            val length = byteBuf.getShort(offset) - 3
+            val length = buffer.readShort() - 3
             // Value
-            offset += 2
             when (type.toInt()) {
-                1 -> source = byteBuf.getByte(offset)
-                2 -> payloadType = byteBuf.getByte(offset)
-                3 -> ssrc = byteBuf.getLong(offset)
-                4 -> callId = byteBuf.getCharSequence(offset, length, Charset.defaultCharset()).toString()
-                11 -> expectedPacketCount = byteBuf.getInt(offset)
-                12 -> receivedPacketCount = byteBuf.getInt(offset)
-                13 -> lostPacketCount = byteBuf.getInt(offset)
-                14 -> rejectedPacketCount = byteBuf.getInt(offset)
-                15 -> duration = byteBuf.getInt(offset)
-                16 -> lastJitter = byteBuf.getFloat(offset)
-                17 -> avgJitter = byteBuf.getFloat(offset)
-                18 -> minJitter = byteBuf.getFloat(offset)
-                19 -> maxJitter = byteBuf.getFloat(offset)
-                20 -> rFactor = byteBuf.getFloat(offset)
-                21 -> mos = byteBuf.getFloat(offset)
-                22 -> fractionLost = byteBuf.getFloat(offset)
+                TAG_SOURCE -> source = buffer.readByte()
+                TAG_PAYLOAD_TYPE -> payloadType = buffer.readByte()
+                TAG_SSRC -> ssrc = buffer.readLong()
+                TAG_CALL_ID -> callId = buffer.readCharSequence(length, Charset.defaultCharset()).toString()
+                TAG_EXPECTED_PACKET_COUNT -> expectedPacketCount = buffer.readInt()
+                TAG_RECEIVED_PACKET_COUNT -> receivedPacketCount = buffer.readInt()
+                TAG_LOST_PACKET_COUNT -> lostPacketCount = buffer.readInt()
+                TAG_REJECTED_PACKET_COUNT -> rejectedPacketCount = buffer.readInt()
+                TAG_DURATION -> duration = buffer.readInt()
+                TAG_LAST_JITTER -> lastJitter = buffer.readFloat()
+                TAG_AVG_JITTER -> avgJitter = buffer.readFloat()
+                TAG_MIN_JITTER -> minJitter = buffer.readFloat()
+                TAG_MAX_JITTER -> maxJitter = buffer.readFloat()
+                TAG_R_FACTOR -> rFactor = buffer.readFloat()
+                TAG_MOS -> mos = buffer.readFloat()
+                TAG_FRACTION_LOST -> fractionLost = buffer.readFloat()
             }
-            offset += length
         }
     }
 }

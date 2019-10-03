@@ -26,5 +26,5 @@ class SdpSession {
     var codecIe = 0F
     var codecBpl = 0F
 
-    val callId: String? = null
+    lateinit var callId: String
 }

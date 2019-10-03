@@ -28,7 +28,6 @@ class ByteArrayPayloadTest {
         val encoded = payload.encode()
         assertEquals(payload.bytes.size, encoded.capacity())
 
-        val decoded = ByteArrayPayload().apply { decode(encoded) }
-        assertArrayEquals(bytes, decoded.bytes)
+        assertArrayEquals(bytes, encoded.array())
     }
 }

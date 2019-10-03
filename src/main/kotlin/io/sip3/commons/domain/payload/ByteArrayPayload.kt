@@ -19,19 +19,9 @@ package io.sip3.commons.domain.payload
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 
-class ByteArrayPayload() : Payload {
-
-    lateinit var bytes: ByteArray
-
-    constructor(bytes: ByteArray) : this() {
-        this.bytes = bytes
-    }
+inline class ByteArrayPayload(val bytes: ByteArray) : Encodable {
 
     override fun encode(): ByteBuf {
         return Unpooled.wrappedBuffer(bytes)
-    }
-
-    override fun decode(byteBuf: ByteBuf) {
-        bytes = byteBuf.array()
     }
 }
