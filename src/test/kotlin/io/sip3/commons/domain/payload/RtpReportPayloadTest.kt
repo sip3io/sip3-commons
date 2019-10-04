@@ -16,6 +16,7 @@
 
 package io.sip3.commons.domain.payload
 
+import io.sip3.commons.util.remainingCapacity
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.charset.Charset
@@ -26,6 +27,31 @@ class RtpReportPayloadTest {
 
         const val CALL_ID = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
         const val CALL_ID_VALUE_LENGTH = CALL_ID.length + 3
+
+        private fun getRtpReportPayload(callId: String?): RtpReportPayload {
+            return RtpReportPayload().apply {
+                source = RtpReportPayload.SOURCE_RTP
+                payloadType = 1
+                ssrc = 2
+                this.callId = callId
+
+                expectedPacketCount = 3
+                receivedPacketCount = 4
+                lostPacketCount = 5
+                rejectedPacketCount = 6
+
+                duration = 7
+
+                lastJitter = 8F
+                avgJitter = 9F
+                minJitter = 10F
+                maxJitter = 11F
+
+                rFactor = 12F
+                mos = 13F
+                fractionLost = 14F
+            }
+        }
     }
 
     @Test
@@ -35,6 +61,8 @@ class RtpReportPayloadTest {
         assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH, byteBuf.capacity())
 
         val decoded = RtpReportPayload().apply { decode(byteBuf) }
+        assertEquals(0, byteBuf.remainingCapacity())
+
         rtpReportPayload.apply {
             assertEquals(source, decoded.source)
             assertEquals(payloadType, decoded.payloadType)
@@ -66,6 +94,8 @@ class RtpReportPayloadTest {
         assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH, byteBuf.capacity())
 
         val decoded = RtpReportPayload().apply { decode(byteBuf) }
+        assertEquals(0, byteBuf.remainingCapacity())
+
         rtpReportPayload.apply {
             assertEquals(source, decoded.source)
             assertEquals(payloadType, decoded.payloadType)
@@ -164,30 +194,6 @@ class RtpReportPayloadTest {
             assertEquals(7, byteBuf.readShort())
             assertEquals(fractionLost, byteBuf.readFloat())
         }
-    }
-
-    private fun getRtpReportPayload(callId: String?): RtpReportPayload {
-        return RtpReportPayload().apply {
-            source = RtpReportPayload.SOURCE_RTP
-            payloadType = 1
-            ssrc = 2
-            this.callId = callId
-
-            expectedPacketCount = 3
-            receivedPacketCount = 4
-            lostPacketCount = 5
-            rejectedPacketCount = 6
-
-            duration = 7
-
-            lastJitter = 8F
-            avgJitter = 9F
-            minJitter = 10F
-            maxJitter = 11F
-
-            rFactor = 12F
-            mos = 13F
-            fractionLost = 14F
-        }
+        assertEquals(0, byteBuf.remainingCapacity())
     }
 }
