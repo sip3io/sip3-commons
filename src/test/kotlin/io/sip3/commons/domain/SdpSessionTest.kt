@@ -20,9 +20,6 @@ import io.vertx.core.json.JsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-/**
- * Actually it's not a test. Use it as example.
- */
 class SdpSessionTest {
 
     @Test
@@ -79,5 +76,4 @@ class SdpSessionTest {
             assertEquals(jsonObject.getString("call_id"), callId)
         }
     }
-
 }
