@@ -20,6 +20,8 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig
+import io.micrometer.elastic.ElasticConfig
+import io.micrometer.elastic.ElasticMeterRegistry
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxMeterRegistry
 import io.micrometer.statsd.StatsdConfig
@@ -125,7 +127,6 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun uri() = influxdb.getString("uri") ?: super.uri()
                     override fun db() = influxdb.getString("db") ?: super.db()
                     override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
-                    override fun batchSize() = influxdb.getInteger("batch-size") ?: super.batchSize()
                     override fun retentionPolicy() = influxdb.getString("retention-policy") ?: super.retentionPolicy()
                     override fun retentionDuration() = influxdb.getString("retention-duration") ?: super.retentionDuration()
                     override fun retentionShardDuration() = influxdb.getString("retention-shard-duration") ?: super.retentionShardDuration()
@@ -153,6 +154,24 @@ open class AbstractBootstrap : AbstractVerticle() {
                     }
                 }, Clock.SYSTEM)
                 registry.add(statsdRegistry)
+            }
+
+            // ELK
+            meters.getJsonObject("elastic")?.let { elastic ->
+                val elasticRegistry = ElasticMeterRegistry(object : ElasticConfig {
+                    override fun get(k: String) = null
+                    override fun host() = elastic.getString("host") ?: super.host()
+                    override fun index() = elastic.getString("index") ?: super.index()
+                    override fun step() = Duration.ofMillis(elastic.getLong("step")) ?: super.step()
+                    override fun indexDateFormat() = elastic.getString("index-date-format") ?: super.indexDateFormat()
+                    override fun indexDateSeparator() = elastic.getString("index-date-separator") ?: super.indexDateSeparator()
+                    override fun autoCreateIndex() = elastic.getBoolean("auto-create-index") ?: super.autoCreateIndex()
+                    override fun pipeline() = elastic.getString("pipeline") ?: super.pipeline()
+                    override fun timestampFieldName() = elastic.getString("timestamp-field-name") ?: super.timestampFieldName()
+                    override fun userName() = elastic.getString("user") ?: super.userName()
+                    override fun password() = elastic.getString("password") ?: super.password()
+                }, Clock.SYSTEM)
+                registry.add(elasticRegistry)
             }
         }
     }

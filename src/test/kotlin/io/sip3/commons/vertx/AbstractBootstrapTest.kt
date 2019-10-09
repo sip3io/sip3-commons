@@ -78,4 +78,31 @@ class AbstractBootstrapTest : VertxTest() {
                 }
         )
     }
+
+    @Test
+    fun `Retrieve ELK counters`() {
+        runTest(
+                deploy = {
+                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                        put("metrics", JsonObject().apply {
+                            put("elastic", JsonObject().apply {
+                                put("host", "http://127.0.0.1:9200")
+                                put("step", 1000)
+                            })
+                        })
+                    })
+                },
+                execute = {
+                    vertx.setPeriodic(100) { Metrics.counter("test").increment() }
+                },
+                assert = {
+                    val server = vertx.createHttpServer()
+                    server.requestHandler { request ->
+                        request.response().end("OK")
+                        context.completeNow()
+                    }
+                    server.listen(9200)
+                }
+        )
+    }
 }
