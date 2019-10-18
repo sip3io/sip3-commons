@@ -35,6 +35,7 @@ class RtpReportPayload : Encodable, Decodable {
         const val TAG_PAYLOAD_TYPE = 2
         const val TAG_SSRC = 3
         const val TAG_CALL_ID = 4
+        const val TAG_CODEC_NAME = 5
 
         const val TAG_EXPECTED_PACKET_COUNT = 11
         const val TAG_RECEIVED_PACKET_COUNT = 12
@@ -58,6 +59,7 @@ class RtpReportPayload : Encodable, Decodable {
     var payloadType: Byte = 0
     var ssrc: Long = 0
     var callId: String? = null
+    var codecName: String? = null
 
     var expectedPacketCount: Int = 0
     var receivedPacketCount: Int = 0
@@ -78,6 +80,7 @@ class RtpReportPayload : Encodable, Decodable {
     override fun encode(): ByteBuf {
         var bufferSize = BASE_PAYLOAD_LENGTH
         callId?.let { bufferSize += it.length + 3 }
+        codecName?.let { bufferSize += it.length + 3 }
 
         return Unpooled.buffer(bufferSize).apply {
             writeTlv(TAG_SOURCE, source)
@@ -85,6 +88,7 @@ class RtpReportPayload : Encodable, Decodable {
             writeTlv(TAG_PAYLOAD_TYPE, payloadType)
             writeTlv(TAG_SSRC, ssrc)
             callId?.let { writeTlv(TAG_CALL_ID, it) }
+            codecName?.let { writeTlv(TAG_CODEC_NAME, it) }
 
             writeTlv(TAG_EXPECTED_PACKET_COUNT, expectedPacketCount)
             writeTlv(TAG_RECEIVED_PACKET_COUNT, receivedPacketCount)
@@ -116,6 +120,7 @@ class RtpReportPayload : Encodable, Decodable {
                 TAG_PAYLOAD_TYPE -> payloadType = buffer.readByte()
                 TAG_SSRC -> ssrc = buffer.readLong()
                 TAG_CALL_ID -> callId = buffer.readCharSequence(length, Charset.defaultCharset()).toString()
+                TAG_CODEC_NAME -> codecName = buffer.readCharSequence(length, Charset.defaultCharset()).toString()
                 TAG_EXPECTED_PACKET_COUNT -> expectedPacketCount = buffer.readInt()
                 TAG_RECEIVED_PACKET_COUNT -> receivedPacketCount = buffer.readInt()
                 TAG_LOST_PACKET_COUNT -> lostPacketCount = buffer.readInt()

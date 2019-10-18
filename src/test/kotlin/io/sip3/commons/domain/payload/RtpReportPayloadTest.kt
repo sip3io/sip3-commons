@@ -28,12 +28,16 @@ class RtpReportPayloadTest {
         const val CALL_ID = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
         const val CALL_ID_VALUE_LENGTH = CALL_ID.length + 3
 
-        private fun getRtpReportPayload(callId: String?): RtpReportPayload {
+        const val CODEC_NAME = "PCMU"
+        const val CODEC_NAME_VALUE_LENGTH = CODEC_NAME.length + 3
+
+        private fun getRtpReportPayload(callId: String?, codecName: String?): RtpReportPayload {
             return RtpReportPayload().apply {
                 source = RtpReportPayload.SOURCE_RTP
                 payloadType = 1
                 ssrc = 2
                 this.callId = callId
+                this.codecName = codecName
 
                 expectedPacketCount = 3
                 receivedPacketCount = 4
@@ -56,9 +60,10 @@ class RtpReportPayloadTest {
 
     @Test
     fun `Encode-decode validation`() {
-        val rtpReportPayload = getRtpReportPayload(CALL_ID)
+        val rtpReportPayload = getRtpReportPayload(CALL_ID, CODEC_NAME)
         val byteBuf = rtpReportPayload.encode()
-        assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH, byteBuf.capacity())
+        val expectedLength = RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH + CODEC_NAME_VALUE_LENGTH
+        assertEquals(expectedLength, byteBuf.capacity())
 
         val decoded = RtpReportPayload().apply { decode(byteBuf) }
         assertEquals(0, byteBuf.remainingCapacity())
@@ -68,6 +73,7 @@ class RtpReportPayloadTest {
             assertEquals(payloadType, decoded.payloadType)
             assertEquals(ssrc, decoded.ssrc)
             assertEquals(callId, decoded.callId)
+            assertEquals(codecName, decoded.codecName)
 
             assertEquals(expectedPacketCount, decoded.expectedPacketCount)
             assertEquals(receivedPacketCount, decoded.receivedPacketCount)
@@ -88,8 +94,8 @@ class RtpReportPayloadTest {
     }
 
     @Test
-    fun `Encode-decode validation without callId`() {
-        val rtpReportPayload = getRtpReportPayload(null)
+    fun `Encode-decode validation without callId and codecName`() {
+        val rtpReportPayload = getRtpReportPayload(null, null)
         val byteBuf = rtpReportPayload.encode()
         assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH, byteBuf.capacity())
 
@@ -122,9 +128,10 @@ class RtpReportPayloadTest {
 
     @Test
     fun `Encode RtpReportPayload and validate tag, length and value`() {
-        val rtpReportPayload = getRtpReportPayload(CALL_ID)
+        val rtpReportPayload = getRtpReportPayload(CALL_ID, CODEC_NAME)
         val byteBuf = rtpReportPayload.encode()
-        assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH, byteBuf.capacity())
+        val expectedLength = RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH + CODEC_NAME_VALUE_LENGTH
+        assertEquals(expectedLength, byteBuf.capacity())
 
         rtpReportPayload.apply {
             assertEquals(RtpReportPayload.TAG_SOURCE, byteBuf.readByte().toInt())
@@ -141,10 +148,17 @@ class RtpReportPayloadTest {
 
             assertEquals(RtpReportPayload.TAG_CALL_ID, byteBuf.readByte().toInt())
             assertEquals(CALL_ID_VALUE_LENGTH, byteBuf.readShort().toInt())
-            val actualBytes = ByteArray(CALL_ID.length)
-            byteBuf.readBytes(actualBytes)
-            val decodedString = actualBytes.toString(Charset.defaultCharset())
-            assertEquals(callId, decodedString)
+            val callIdBytes = ByteArray(CALL_ID.length)
+            byteBuf.readBytes(callIdBytes)
+            val decodedCallId = callIdBytes.toString(Charset.defaultCharset())
+            assertEquals(callId, decodedCallId)
+
+            assertEquals(RtpReportPayload.TAG_CODEC_NAME, byteBuf.readByte().toInt())
+            assertEquals(CODEC_NAME_VALUE_LENGTH, byteBuf.readShort().toInt())
+            val codecNameBytes = ByteArray(CODEC_NAME.length)
+            byteBuf.readBytes(codecNameBytes)
+            val decodedCodecName = codecNameBytes.toString(Charset.defaultCharset())
+            assertEquals(codecName, decodedCodecName)
 
             assertEquals(RtpReportPayload.TAG_EXPECTED_PACKET_COUNT, byteBuf.readByte().toInt())
             assertEquals(7, byteBuf.readShort())
