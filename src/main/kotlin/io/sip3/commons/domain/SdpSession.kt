@@ -25,6 +25,8 @@ class SdpSession {
 
     @JsonProperty("payload_type")
     var payloadType: Byte = 0
+    @JsonProperty("codec_name")
+    var codecName: String? = null
     @JsonProperty("clock_rate")
     var clockRate = 0
     @JsonProperty("codec_ie")
