@@ -26,6 +26,11 @@ fun ByteBuf.writeTlv(tag: Int, value: Any) {
             writeShort(4)
             writeByte(value.toInt())
         }
+        is Boolean -> {
+            writeByte(tag)
+            writeShort(4)
+            writeBoolean(value)
+        }
         is Short -> {
             writeByte(tag)
             writeShort(5)

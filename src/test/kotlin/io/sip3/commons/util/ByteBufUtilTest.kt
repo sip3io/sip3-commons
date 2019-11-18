@@ -40,6 +40,15 @@ class ByteBufUtilTest {
     }
 
     @Test
+    fun `Write boolean as tlv`() {
+        val booleanValue = true
+
+        createBuffer(booleanValue, 4).also { buffer ->
+            assertEquals(booleanValue, buffer.readBoolean())
+        }
+    }
+
+    @Test
     fun `Write short as tlv`() {
         val shortValue = 2.toShort()
 

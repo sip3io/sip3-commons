@@ -26,7 +26,7 @@ class RtpReportPayload : Encodable, Decodable {
 
     companion object {
 
-        const val BASE_PAYLOAD_LENGTH = 103
+        const val BASE_PAYLOAD_LENGTH = 107
 
         const val SOURCE_RTP = 0.toByte()
         const val SOURCE_RTCP = 1.toByte()
@@ -36,6 +36,7 @@ class RtpReportPayload : Encodable, Decodable {
         const val TAG_SSRC = 3
         const val TAG_CALL_ID = 4
         const val TAG_CODEC_NAME = 5
+        const val TAG_CUMULATIVE = 6
 
         const val TAG_EXPECTED_PACKET_COUNT = 11
         const val TAG_RECEIVED_PACKET_COUNT = 12
@@ -60,6 +61,7 @@ class RtpReportPayload : Encodable, Decodable {
     var ssrc: Long = 0
     var callId: String? = null
     var codecName: String? = null
+    var cumulative = false
 
     var expectedPacketCount: Int = 0
     var receivedPacketCount: Int = 0
@@ -89,6 +91,7 @@ class RtpReportPayload : Encodable, Decodable {
             writeTlv(TAG_SSRC, ssrc)
             callId?.let { writeTlv(TAG_CALL_ID, it) }
             codecName?.let { writeTlv(TAG_CODEC_NAME, it) }
+            writeTlv(TAG_CUMULATIVE, cumulative)
 
             writeTlv(TAG_EXPECTED_PACKET_COUNT, expectedPacketCount)
             writeTlv(TAG_RECEIVED_PACKET_COUNT, receivedPacketCount)
@@ -121,6 +124,7 @@ class RtpReportPayload : Encodable, Decodable {
                 TAG_SSRC -> ssrc = buffer.readLong()
                 TAG_CALL_ID -> callId = buffer.readCharSequence(length, Charset.defaultCharset()).toString()
                 TAG_CODEC_NAME -> codecName = buffer.readCharSequence(length, Charset.defaultCharset()).toString()
+                TAG_CUMULATIVE -> cumulative = buffer.readBoolean()
                 TAG_EXPECTED_PACKET_COUNT -> expectedPacketCount = buffer.readInt()
                 TAG_RECEIVED_PACKET_COUNT -> receivedPacketCount = buffer.readInt()
                 TAG_LOST_PACKET_COUNT -> lostPacketCount = buffer.readInt()
