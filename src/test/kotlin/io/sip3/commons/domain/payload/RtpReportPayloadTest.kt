@@ -160,6 +160,10 @@ class RtpReportPayloadTest {
             val decodedCodecName = codecNameBytes.toString(Charset.defaultCharset())
             assertEquals(codecName, decodedCodecName)
 
+            assertEquals(RtpReportPayload.TAG_CUMULATIVE, byteBuf.readByte().toInt())
+            assertEquals(4, byteBuf.readShort())
+            assertEquals(cumulative, byteBuf.readBoolean())
+
             assertEquals(RtpReportPayload.TAG_EXPECTED_PACKET_COUNT, byteBuf.readByte().toInt())
             assertEquals(7, byteBuf.readShort())
             assertEquals(expectedPacketCount, byteBuf.readInt())
