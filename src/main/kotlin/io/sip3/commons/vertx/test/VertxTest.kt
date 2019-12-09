@@ -24,6 +24,7 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.core.deployVerticleAwait
 import io.vertx.kotlin.core.deploymentOptionsOf
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -42,7 +43,7 @@ open class VertxTest {
         context = VertxTestContext()
         vertx = Vertx.vertx()
         vertx.registerLocalCodec()
-        GlobalScope.launch {
+        GlobalScope.launch(vertx.dispatcher()) {
             assert?.invoke()
             deploy?.invoke()
             execute?.invoke()
