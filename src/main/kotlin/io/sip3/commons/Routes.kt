@@ -16,8 +16,10 @@
 
 package io.sip3.commons
 
-object Routes {
+interface Routes {
 
     // Config
-    const val config_change = "config_change"
+    val config_change get() = "config_change"
+
+    companion object : Routes
 }
