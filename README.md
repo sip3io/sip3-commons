@@ -1,6 +1,6 @@
 # SIP3 Commons #
 
-**SIP3 Commons** is a set of common classes used in multiple SIP3 modules**.
+**SIP3 Commons** is a set of common classes used in multiple SIP3 modules.
 
 ## Intro
 
