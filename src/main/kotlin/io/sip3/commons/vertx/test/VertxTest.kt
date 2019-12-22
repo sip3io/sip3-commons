@@ -29,6 +29,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.extension.ExtendWith
+import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
@@ -53,6 +54,10 @@ open class VertxTest {
         if (context.failed()) {
             throw context.causeOfFailure()
         }
+    }
+
+    fun findRandomPort() : Int {
+        return ServerSocket(0).use { it.localPort }
     }
 
     suspend fun Vertx.deployTestVerticle(verticle: KClass<out Verticle>, config: JsonObject = JsonObject()) {
