@@ -19,6 +19,7 @@ package io.sip3.commons.domain
 class Attribute {
 
     companion object {
+
         const val TYPE_STRING = "string"
         const val TYPE_NUMBER = "number"
         const val TYPE_BOOLEAN = "boolean"
