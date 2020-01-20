@@ -17,7 +17,8 @@
 package io.sip3.commons.domain.payload
 
 import io.sip3.commons.util.remainingCapacity
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.nio.charset.Charset
 
@@ -54,6 +55,9 @@ class RtpReportPayloadTest {
                 rFactor = 12F
                 mos = 13F
                 fractionLost = 14F
+
+                createdAt = 1579511172674
+                startedAt = 1579522272674
             }
         }
     }
@@ -90,6 +94,9 @@ class RtpReportPayloadTest {
             assertEquals(rFactor, decoded.rFactor)
             assertEquals(mos, decoded.mos)
             assertEquals(fractionLost, decoded.fractionLost)
+
+            assertEquals(createdAt, decoded.createdAt)
+            assertEquals(startedAt, decoded.startedAt)
         }
     }
 
@@ -123,6 +130,9 @@ class RtpReportPayloadTest {
             assertEquals(rFactor, decoded.rFactor)
             assertEquals(mos, decoded.mos)
             assertEquals(fractionLost, decoded.fractionLost)
+
+            assertEquals(createdAt, decoded.createdAt)
+            assertEquals(startedAt, decoded.startedAt)
         }
     }
 
@@ -211,6 +221,14 @@ class RtpReportPayloadTest {
             assertEquals(RtpReportPayload.TAG_FRACTION_LOST, byteBuf.readByte().toInt())
             assertEquals(7, byteBuf.readShort())
             assertEquals(fractionLost, byteBuf.readFloat())
+
+            assertEquals(RtpReportPayload.TAG_CREATED_AT, byteBuf.readByte().toInt())
+            assertEquals(11, byteBuf.readShort())
+            assertEquals(createdAt, byteBuf.readLong())
+
+            assertEquals(RtpReportPayload.TAG_STARTED_AT, byteBuf.readByte().toInt())
+            assertEquals(11, byteBuf.readShort())
+            assertEquals(startedAt, byteBuf.readLong())
         }
         assertEquals(0, byteBuf.remainingCapacity())
     }
