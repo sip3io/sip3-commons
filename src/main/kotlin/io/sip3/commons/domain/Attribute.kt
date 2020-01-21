@@ -27,5 +27,5 @@ class Attribute {
 
     lateinit var name: String
     lateinit var type: String
-    var options = mutableSetOf<String>()
+    var options: MutableSet<String>? = null
 }
