@@ -22,11 +22,26 @@ object IpUtil {
         if (addr.size != 4) {
             throw UnsupportedOperationException("Can't convert ${addr.size}bytes address to Int")
         }
+
         var number = 0
         repeat(4) { i ->
             val octet = addr[i].toInt() and 0xff
             number = (number shl 8) or octet
         }
+        return number
+    }
+
+    fun convertToInt(addr: String): Int {
+        val octets = addr.split(".")
+        if (octets.size != 4) {
+            throw UnsupportedOperationException("Can't convert '$addr' to Int")
+        }
+
+        var number = 0
+        repeat(4) { i ->
+            number = (number shl 8) + octets[i].toInt()
+        }
+
         return number
     }
 
