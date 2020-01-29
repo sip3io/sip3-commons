@@ -18,13 +18,16 @@ package io.sip3.commons.domain
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-class SdpSession {
+class Codec {
 
-    var id: Long = 0
-    var timestamp: Long = 0
+    var name: String = "UNDEFINED"
 
-    lateinit var codec: Codec
+    @JsonProperty("payload_type")
+    var payloadType: Byte = -1
 
-    @JsonProperty("call_id")
-    lateinit var callId: String
+    @JsonProperty("clock_rate")
+    var clockRate: Int = 8000
+
+    var ie: Float = 5.0F
+    var bpl: Float = 10.0F
 }

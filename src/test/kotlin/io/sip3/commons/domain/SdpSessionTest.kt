@@ -28,28 +28,32 @@ class SdpSessionTest {
             id = 1000L
             timestamp = System.currentTimeMillis()
 
-            payloadType = 0
-            codecName = "PCMU"
-            clockRate = 8000
-            codecIe = 0F
-            codecBpl = 4.3F
+            codec = Codec().apply {
+                payloadType = 0
+                name = "PCMU"
+                clockRate = 8000
+                ie = 0F
+                bpl = 4.3F
+            }
 
             callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
         }
 
         JsonObject.mapFrom(sdpSession).apply {
-            assertEquals(8, size())
+            assertEquals(4, size())
             assertEquals(sdpSession.id, getLong("id"))
             assertEquals(sdpSession.timestamp, getLong("timestamp"))
-
-            assertEquals(sdpSession.payloadType, getInteger("payload_type").toByte())
-            assertEquals(sdpSession.codecName, getString("codec_name"))
-
-            assertEquals(sdpSession.clockRate, getInteger("clock_rate"))
-            assertEquals(sdpSession.codecIe, getFloat("codec_ie"))
-            assertEquals(sdpSession.codecBpl, getFloat("codec_bpl"))
-
             assertEquals(sdpSession.callId, getString("call_id"))
+
+            val codec = sdpSession.codec
+            getJsonObject("codec").apply {
+                assertEquals(codec.payloadType, getInteger("payload_type").toByte())
+                assertEquals(codec.name, getString("name"))
+
+                assertEquals(codec.clockRate, getInteger("clock_rate"))
+                assertEquals(codec.ie, getFloat("ie"))
+                assertEquals(codec.bpl, getFloat("bpl"))
+            }
         }
     }
 
@@ -58,27 +62,29 @@ class SdpSessionTest {
         val jsonObject = JsonObject().apply {
             put("id", 1000L)
             put("timestamp", System.currentTimeMillis())
-
-            put("payload_type", 0)
-            put("codec_name", "PCMU")
-            put("clock_rate", 8000)
-            put("codec_ie", 0F)
-            put("codec_bpl", 4.3F)
-
             put("call_id", "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com")
+
+            put("codec", JsonObject().apply {
+                put("payload_type", 0)
+                put("name", "PCMU")
+                put("clock_rate", 8000)
+                put("ie", 0F)
+                put("bpl", 4.3F)
+            })
         }
 
         jsonObject.mapTo(SdpSession::class.java).apply {
             assertEquals(jsonObject.getLong("id"), id)
             assertEquals(jsonObject.getLong("timestamp"), timestamp)
-
-            assertEquals(jsonObject.getInteger("payload_type").toByte(), payloadType)
-            assertEquals(jsonObject.getString("codec_name"), codecName)
-            assertEquals(jsonObject.getInteger("clock_rate"), clockRate)
-            assertEquals(jsonObject.getFloat("codec_ie"), codecIe)
-            assertEquals(jsonObject.getFloat("codec_bpl"), codecBpl)
-
             assertEquals(jsonObject.getString("call_id"), callId)
+
+            jsonObject.getJsonObject("codec").apply {
+                assertEquals(getInteger("payload_type").toByte(), codec.payloadType)
+                assertEquals(getString("name"), codec.name)
+                assertEquals(getInteger("clock_rate"), codec.clockRate)
+                assertEquals(getFloat("ie"), codec.ie)
+                assertEquals(getFloat("bpl"), codec.bpl)
+            }
         }
     }
 }
