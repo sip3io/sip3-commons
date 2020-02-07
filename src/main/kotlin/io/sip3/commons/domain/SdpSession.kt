@@ -24,6 +24,7 @@ class SdpSession {
     var timestamp: Long = 0
 
     lateinit var codec: Codec
+    var ptime: Int = 20
 
     @JsonProperty("call_id")
     lateinit var callId: String
