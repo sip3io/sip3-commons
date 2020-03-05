@@ -28,6 +28,7 @@ import io.micrometer.statsd.StatsdConfig
 import io.micrometer.statsd.StatsdFlavor
 import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
+import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
@@ -43,7 +44,7 @@ import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
 import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
 import mu.KotlinLogging
-import org.reflections.ReflectionUtils.getAllSuperTypes
+import org.reflections.ReflectionUtils
 import org.reflections.Reflections
 import java.time.Duration
 import kotlin.system.exitProcess
@@ -182,13 +183,20 @@ open class AbstractBootstrap : AbstractVerticle() {
         val reflections = Reflections("io.sip3")
         reflections.getTypesAnnotatedWith(Instance::class.java)
                 .filter { clazz ->
-                    val isVerticle = getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
-                    val hasNoChildren = reflections.getSubTypesOf(clazz).isEmpty()
-                    return@filter isVerticle && hasNoChildren
+                    // Filter by 'Verticle' super type
+                    ReflectionUtils.getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
+                }
+                .filter { clazz ->
+                    // Filter by children
+                    reflections.getSubTypesOf(clazz).isEmpty()
+                }
+                .filter { clazz ->
+                    // Filter by `ConditionalOnProperty` annotation
+                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { config.containsKey(it.value) } ?: true
                 }
                 .forEach { clazz ->
-                    val annotation = clazz.getDeclaredAnnotation(Instance::class.java)
-                    val instances = when (annotation.singleton) {
+                    val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
+                    val instances = when (instanceAnnotation.singleton) {
                         true -> 1
                         else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
                     }
