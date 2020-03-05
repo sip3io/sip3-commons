@@ -17,12 +17,42 @@
 package io.sip3.commons.vertx
 
 import io.micrometer.core.instrument.Metrics
+import io.sip3.commons.vertx.annotations.Instance
 import io.sip3.commons.vertx.test.VertxTest
+import io.sip3.commons.vertx.util.endpoints
+import io.vertx.core.AbstractVerticle
 import io.vertx.core.datagram.DatagramSocketOptions
 import io.vertx.core.json.JsonObject
 import org.junit.jupiter.api.Test
 
 class AbstractBootstrapTest : VertxTest() {
+
+    @Instance
+    class A : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("A") {}
+        }
+    }
+
+    @Test
+    fun `Check 'A' deployment`() {
+        runTest(
+                deploy = {
+                    vertx.deployTestVerticle(AbstractBootstrap::class)
+                },
+                execute = {
+                    // Do nothing...
+                },
+                assert = {
+                    vertx.setPeriodic(100) {
+                        if (vertx.eventBus().endpoints().contains("A")) {
+                            context.completeNow()
+                        }
+                    }
+                }
+        )
+    }
 
     @Test
     fun `Retrieve InfluxDB counters`() {
