@@ -43,7 +43,7 @@ import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
 import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
 import mu.KotlinLogging
-import org.reflections.ReflectionUtils
+import org.reflections.ReflectionUtils.getAllSuperTypes
 import org.reflections.Reflections
 import java.time.Duration
 import kotlin.system.exitProcess
@@ -179,9 +179,12 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open fun deployVerticles(config: JsonObject) {
-        Reflections("io.sip3").getTypesAnnotatedWith(Instance::class.java)
+        val reflections = Reflections("io.sip3")
+        reflections.getTypesAnnotatedWith(Instance::class.java)
                 .filter { clazz ->
-                    ReflectionUtils.getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
+                    val isVerticle = getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
+                    val hasNoChildren = reflections.getSubTypesOf(clazz).isEmpty()
+                    return@filter isVerticle && hasNoChildren
                 }
                 .forEach { clazz ->
                     val annotation = clazz.getDeclaredAnnotation(Instance::class.java)

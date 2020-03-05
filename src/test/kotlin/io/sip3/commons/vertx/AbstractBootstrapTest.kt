@@ -28,15 +28,23 @@ import org.junit.jupiter.api.Test
 class AbstractBootstrapTest : VertxTest() {
 
     @Instance
-    class A : AbstractVerticle() {
+    open class A : AbstractVerticle() {
 
         override fun start() {
             vertx.eventBus().localConsumer<Any>("A") {}
         }
     }
 
+    @Instance
+    class B : A() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("B") {}
+        }
+    }
+
     @Test
-    fun `Check 'A' deployment`() {
+    fun `Check 'A' and 'B' deployment`() {
         runTest(
                 deploy = {
                     vertx.deployTestVerticle(AbstractBootstrap::class)
@@ -46,7 +54,8 @@ class AbstractBootstrapTest : VertxTest() {
                 },
                 assert = {
                     vertx.setPeriodic(100) {
-                        if (vertx.eventBus().endpoints().contains("A")) {
+                        val endpoints = vertx.eventBus().endpoints()
+                        if (!endpoints.contains("A") && endpoints.contains("B")) {
                             context.completeNow()
                         }
                     }
