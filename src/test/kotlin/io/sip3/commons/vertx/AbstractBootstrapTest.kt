@@ -17,12 +17,77 @@
 package io.sip3.commons.vertx
 
 import io.micrometer.core.instrument.Metrics
+import io.sip3.commons.vertx.annotations.ConditionalOnProperty
+import io.sip3.commons.vertx.annotations.Instance
 import io.sip3.commons.vertx.test.VertxTest
+import io.sip3.commons.vertx.util.endpoints
+import io.vertx.core.AbstractVerticle
 import io.vertx.core.datagram.DatagramSocketOptions
 import io.vertx.core.json.JsonObject
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AbstractBootstrapTest : VertxTest() {
+
+    @Instance
+    open class A : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("A") {}
+        }
+    }
+
+    @Instance
+    class B : A() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("B") {}
+        }
+    }
+
+    @Instance
+    @ConditionalOnProperty("C")
+    open class C : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("C") {}
+        }
+    }
+
+    @Instance
+    @ConditionalOnProperty("D")
+    open class D : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("D") {}
+        }
+    }
+
+    @Test
+    fun `Check auto deployment`() {
+        runTest(
+                deploy = {
+                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                        put("D", true)
+                    })
+                },
+                execute = {
+                    // Do nothing...
+                },
+                assert = {
+                    vertx.setPeriodic(100) {
+                        val endpoints = vertx.eventBus().endpoints()
+                        if (endpoints.size == 2) {
+                            context.verify {
+                                assertTrue(endpoints.contains("B"))
+                                assertTrue(endpoints.contains("D"))
+                            }
+                            context.completeNow()
+                        }
+                    }
+                }
+        )
+    }
 
     @Test
     fun `Retrieve InfluxDB counters`() {

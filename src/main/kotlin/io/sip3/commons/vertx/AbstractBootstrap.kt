@@ -28,6 +28,8 @@ import io.micrometer.statsd.StatsdConfig
 import io.micrometer.statsd.StatsdFlavor
 import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
+import io.sip3.commons.vertx.annotations.ConditionalOnProperty
+import io.sip3.commons.vertx.annotations.Instance
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
@@ -42,8 +44,9 @@ import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
 import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
 import mu.KotlinLogging
+import org.reflections.ReflectionUtils
+import org.reflections.Reflections
 import java.time.Duration
-import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
 open class AbstractBootstrap : AbstractVerticle() {
@@ -177,15 +180,36 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open fun deployVerticles(config: JsonObject) {
-        // Do nothing...
+        val reflections = Reflections("io.sip3")
+        reflections.getTypesAnnotatedWith(Instance::class.java)
+                .filter { clazz ->
+                    // Filter by 'Verticle' super type
+                    ReflectionUtils.getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
+                }
+                .filter { clazz ->
+                    // Filter by children
+                    reflections.getSubTypesOf(clazz).isEmpty()
+                }
+                .filter { clazz ->
+                    // Filter by `ConditionalOnProperty` annotation
+                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { config.containsKey(it.value) } ?: true
+                }
+                .forEach { clazz ->
+                    val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
+                    val instances = when (instanceAnnotation.singleton) {
+                        true -> 1
+                        else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
+                    }
+                    vertx.deployVerticle(clazz as Class<out Verticle>, config, instances)
+                }
     }
 
-    fun Vertx.deployVerticle(verticle: KClass<out Verticle>, config: JsonObject, instances: Int = 1) {
+    fun Vertx.deployVerticle(verticle: Class<out Verticle>, config: JsonObject, instances: Int = 1) {
         (0 until instances).forEach { index ->
             val options = deploymentOptionsOf(
                     config = config.copy().put("index", index)
             )
-            deployVerticle(verticle.java, options) { asr ->
+            deployVerticle(verticle, options) { asr ->
                 if (asr.failed()) {
                     logger.error("Vertx 'deployVerticle()' failed. Verticle: $verticle", asr.cause())
                     exitProcess(-1)

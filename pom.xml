@@ -61,6 +61,12 @@
             <artifactId>micrometer-registry-elastic</artifactId>
         </dependency>
 
+        <!-- Utils -->
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>io.github.microutils</groupId>
