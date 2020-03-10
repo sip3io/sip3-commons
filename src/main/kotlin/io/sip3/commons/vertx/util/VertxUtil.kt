@@ -24,7 +24,10 @@ fun Vertx.setPeriodic(initialDelay: Long, period: Long, handler: () -> Unit) {
 
     when (initialDelay) {
         0L -> {
-            handler.invoke()
+            // Hack to keep execution within Vert.x context
+            setTimer(1) {
+                handler.invoke()
+            }
             setPeriodic(period) { handler.invoke() }
         }
         else -> {
