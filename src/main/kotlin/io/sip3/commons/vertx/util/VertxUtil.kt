@@ -19,7 +19,7 @@ package io.sip3.commons.vertx.util
 import io.vertx.core.Vertx
 
 fun Vertx.setPeriodic(initialDelay: Long, period: Long, handler: () -> Unit) {
-    require(initialDelay >= 0L) { "Cannot schedule a timer with delay < 1 ms" }
+    require(initialDelay >= 0L && period >= 1L) { "Cannot schedule a timer with 'initial delay' < 0 ms and 'period' < 1 ms" }
 
     when (initialDelay) {
         0L -> {
