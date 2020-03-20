@@ -30,6 +30,7 @@ import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
+import io.sip3.commons.vertx.util.ConfigUtil
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
@@ -192,7 +193,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                 }
                 .filter { clazz ->
                     // Filter by `ConditionalOnProperty` annotation
-                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { config.containsKey(it.value) } ?: true
+                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { ConfigUtil.contains(config, it.value) } ?: true
                 }
                 .forEach { clazz ->
                     val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)

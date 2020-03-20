@@ -55,7 +55,7 @@ class AbstractBootstrapTest : VertxTest() {
     }
 
     @Instance
-    @ConditionalOnProperty("D")
+    @ConditionalOnProperty("D.D")
     open class D : AbstractVerticle() {
 
         override fun start() {
@@ -68,7 +68,9 @@ class AbstractBootstrapTest : VertxTest() {
         runTest(
                 deploy = {
                     vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
-                        put("D", true)
+                        put("D", JsonObject().apply {
+                            put("D", true)
+                        })
                     })
                 },
                 execute = {
