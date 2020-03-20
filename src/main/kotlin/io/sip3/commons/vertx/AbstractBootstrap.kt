@@ -39,6 +39,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.MessageCodec
 import io.vertx.core.json.JsonObject
+import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
 import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
@@ -192,7 +193,10 @@ open class AbstractBootstrap : AbstractVerticle() {
                 }
                 .filter { clazz ->
                     // Filter by `ConditionalOnProperty` annotation
-                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { config.containsKey(it.value) } ?: true
+                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { conditionalOnPropertyAnnotation ->
+                        val pointer = JsonPointer.from(conditionalOnPropertyAnnotation.value)
+                        return@filter pointer.queryJson(config) != null
+                    } ?: true
                 }
                 .forEach { clazz ->
                     val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
