@@ -19,6 +19,7 @@ package io.sip3.commons.vertx.util
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.impl.EventBusImpl
 
+@Suppress("UNCHECKED_CAST")
 fun EventBus.endpoints(): Set<String> {
     return (this as? EventBusImpl)?.let { eventBus ->
         // Read protected `handlerMap` field

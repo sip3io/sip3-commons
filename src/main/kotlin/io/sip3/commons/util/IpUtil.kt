@@ -45,6 +45,7 @@ object IpUtil {
         return number
     }
 
+    @OptIn(ExperimentalUnsignedTypes::class)
     fun convertToString(addr: ByteArray): String {
         if (addr.size != 4) {
             throw UnsupportedOperationException("Can't convert ${addr.size}bytes address to String")

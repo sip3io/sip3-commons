@@ -6,7 +6,7 @@
 
     <groupId>io.sip3.commons</groupId>
     <artifactId>sip3-commons</artifactId>
-    <version>${parent.version}</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <parent>
         <groupId>io.sip3</groupId>
@@ -15,12 +15,6 @@
     </parent>
 
     <dependencies>
-        <!-- Kotlin -->
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-osgi-bundle</artifactId>
-        </dependency>
-
         <!-- Vert.x -->
         <dependency>
             <groupId>io.vertx</groupId>
@@ -120,6 +114,12 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <args>
+                        <arg>-Xinline-classes</arg>
+                        <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+                    </args>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
