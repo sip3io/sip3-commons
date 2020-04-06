@@ -198,13 +198,14 @@ open class AbstractBootstrap : AbstractVerticle() {
                         return@filter pointer.queryJson(config) != null
                     } ?: true
                 }
+                .filterIsInstance<Class<out Verticle>>()
                 .forEach { clazz ->
                     val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
                     val instances = when (instanceAnnotation.singleton) {
                         true -> 1
                         else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
                     }
-                    vertx.deployVerticle(clazz as Class<out Verticle>, config, instances)
+                    vertx.deployVerticle(clazz, config, instances)
                 }
     }
 
