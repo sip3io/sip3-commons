@@ -1,0 +1,57 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent any
+
+    tools {
+        maven "maven3"
+    }
+
+    stages {
+        stage('Init') {
+            steps {
+                configFileProvider([configFile(fileId: '75d7a907-05a7-49c4-8ca4-ecfc124b4afb', targetLocation: 'settings.xml')]) {
+                    sh 'mkdir -p ~/.m2 && cp $WORKSPACE/settings.xml -f ~/.m2/settings.xml'
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn -Dmaven.test.failure.ignore=true clean test'
+            }
+
+            post {
+                success {
+                    junit 'target/surefire-reports/**/*.xml'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn -Dmaven.test.skip=true clean package'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+
+                // Deploy to internal artifactory
+                sh "mvn clean install deploy:deploy -Dmaven.test.skip=true -DaltDeploymentRepository=archiva.snapshots::default::${ARTIFACTORY_URI}"
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
