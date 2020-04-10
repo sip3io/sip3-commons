@@ -51,9 +51,16 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            steps {
+                sh 'mvn -DskipTests=true clean package'
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+            }
+        }
+
         stage('Test') {
             steps {
-                sh 'mvn clean test'
+                sh 'mvn test'
             }
 
             post {
@@ -74,13 +81,6 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            steps {
-                sh 'mvn -DskipTests=true clean package'
-                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
-            }
-        }
-
         stage('Release') {
             steps {
                 // Add tag
@@ -90,7 +90,7 @@ pipeline {
                 }
 
                 // Deploy to internal artifactory
-                sh 'mvn clean deploy:deploy -DskipTests=true -DaltDeploymentRepository=archiva.internal::default::${ARTIFACTORY_URI}'
+                sh 'mvn deploy:deploy -DskipTests=true -DaltDeploymentRepository=archiva.internal::default::${ARTIFACTORY_URI}'
             }
         }
     }
