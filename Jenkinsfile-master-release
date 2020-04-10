@@ -28,7 +28,7 @@ pipeline {
         stage('Prepare version') {
             steps {
                 // Drop -SNAPSHOT qualifier
-                sh 'mvn versions:set -DremoveSnapshot versions:commit'
+                sh 'mvn versions:set -DremoveSnapshot'
 
                 // Drop -SNAPSHOT qualifier for Parent
                 sh 'mvn versions:update-parent -DallowSnapshots=false'
@@ -46,11 +46,20 @@ pipeline {
                 }
                 echo "Release branch: ${releaseBranch}"
 
-                // Update parent version
-                sh "mvn versions:update-parent \"-DparentVersion=${releaseVersion}\""
-
                 // Commit version changes
                 sh 'mvn versions:commit'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn clean test'
+            }
+
+            post {
+                always {
+                    junit 'target/surefire-reports/**/*.xml'
+                }
             }
         }
 
@@ -65,21 +74,9 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'mvn clean test'
-            }
-
-            post {
-                success {
-                    junit 'target/surefire-reports/**/*.xml'
-                }
-            }
-        }
-
         stage('Build') {
             steps {
-                sh 'mvn -Dmaven.test.skip=true clean install'
+                sh 'mvn -DskipTests=true clean package'
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
             }
         }
@@ -93,7 +90,7 @@ pipeline {
                 }
 
                 // Deploy to internal artifactory
-                sh "mvn clean deploy:deploy -DaltDeploymentRepository=archiva.internal::default::${ARTIFACTORY_URI}"
+                sh 'mvn clean deploy:deploy -DskipTests=true -DaltDeploymentRepository=archiva.internal::default::${ARTIFACTORY_URI}'
             }
         }
     }

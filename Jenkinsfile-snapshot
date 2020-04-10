@@ -24,11 +24,11 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh 'mvn -Dmaven.test.failure.ignore=true clean test'
+                sh 'mvn clean test'
             }
 
             post {
-                success {
+                always {
                     junit 'target/surefire-reports/**/*.xml'
                 }
             }
@@ -36,15 +36,14 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn -Dmaven.test.skip=true clean package'
+                sh 'mvn -DskipTests=true clean package'
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
             }
         }
 
         stage('Deploy') {
             steps {
-
-                // Deploy to internal artifactory
-                sh "mvn clean install deploy:deploy -Dmaven.test.skip=true -DaltDeploymentRepository=archiva.snapshots::default::${ARTIFACTORY_URI}"
+                sh 'mvn clean deploy:deploy -DskipTests=true -DaltDeploymentRepository=archiva.snapshots::default::${ARTIFACTORY_URI}'
             }
         }
     }
