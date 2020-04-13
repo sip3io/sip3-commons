@@ -43,7 +43,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'mvn deploy:deploy -DskipTests=true -DaltDeploymentRepository=archiva.snapshots::default::${ARTIFACTORY_URI}'
+                sh 'mvn deploy -DskipTests=true -DaltDeploymentRepository=archiva.snapshots::default::${ARTIFACTORY_URI}'
             }
         }
     }
