@@ -90,7 +90,7 @@ pipeline {
                 }
 
                 // Deploy to internal artifactory
-                sh 'mvn deploy:deploy -DskipTests=true -DaltDeploymentRepository=archiva.internal::default::${ARTIFACTORY_URI}'
+                sh 'mvn deploy -DskipTests=true -DaltDeploymentRepository=archiva.internal::default::${ARTIFACTORY_URI}'
             }
         }
     }
