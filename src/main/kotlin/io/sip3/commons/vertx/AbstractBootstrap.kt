@@ -205,22 +205,18 @@ open class AbstractBootstrap : AbstractVerticle() {
                         true -> 1
                         else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
                     }
-                    vertx.deployVerticle(clazz, config, instances)
-                }
-    }
 
-    fun Vertx.deployVerticle(verticle: Class<out Verticle>, config: JsonObject, instances: Int = 1) {
-        (0 until instances).forEach { index ->
-            val options = deploymentOptionsOf(
-                    config = config.copy().put("index", index)
-            )
-            deployVerticle(verticle, options) { asr ->
-                if (asr.failed()) {
-                    logger.error("Vertx 'deployVerticle()' failed. Verticle: $verticle", asr.cause())
-                    exitProcess(-1)
+                    val deploymentOptions = deploymentOptionsOf(
+                            config = config,
+                            instances = instances
+                    )
+                    vertx.deployVerticle(clazz, deploymentOptions) { asr ->
+                        if (asr.failed()) {
+                            logger.error(asr.cause()) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
+                            exitProcess(-1)
+                        }
+                    }
                 }
-            }
-        }
     }
 }
 
