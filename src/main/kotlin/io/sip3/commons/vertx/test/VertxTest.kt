@@ -16,7 +16,7 @@
 
 package io.sip3.commons.vertx.test
 
-import io.sip3.commons.vertx.registerLocalCodec
+import io.sip3.commons.vertx.util.registerLocalCodec
 import io.vertx.core.Verticle
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject

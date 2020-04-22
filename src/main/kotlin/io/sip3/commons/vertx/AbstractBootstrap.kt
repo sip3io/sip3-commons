@@ -30,14 +30,12 @@ import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
+import io.sip3.commons.vertx.util.registerLocalCodec
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Verticle
-import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.eventbus.MessageCodec
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
@@ -218,15 +216,4 @@ open class AbstractBootstrap : AbstractVerticle() {
                     }
                 }
     }
-}
-
-fun Vertx.registerLocalCodec() {
-    eventBus().unregisterCodec("local")
-    eventBus().registerCodec(object : MessageCodec<Any, Any> {
-        override fun decodeFromWire(pos: Int, buffer: Buffer?) = throw NotImplementedError()
-        override fun encodeToWire(buffer: Buffer?, s: Any?) = throw NotImplementedError()
-        override fun transform(s: Any?) = s
-        override fun name() = "local"
-        override fun systemCodecID(): Byte = -1
-    })
 }
