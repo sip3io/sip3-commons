@@ -17,6 +17,19 @@
 package io.sip3.commons.vertx.util
 
 import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.eventbus.MessageCodec
+
+fun Vertx.registerLocalCodec() {
+    eventBus().unregisterCodec("local")
+    eventBus().registerCodec(object : MessageCodec<Any, Any> {
+        override fun decodeFromWire(pos: Int, buffer: Buffer?) = throw NotImplementedError()
+        override fun encodeToWire(buffer: Buffer?, s: Any?) = throw NotImplementedError()
+        override fun transform(s: Any?) = s
+        override fun name() = "local"
+        override fun systemCodecID(): Byte = -1
+    })
+}
 
 fun Vertx.setPeriodic(initialDelay: Long, period: Long, handler: () -> Unit) {
     require(initialDelay >= 0L) { "Cannot schedule a timer with initial delay < 0 ms" }

@@ -30,14 +30,12 @@ import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
+import io.sip3.commons.vertx.util.registerLocalCodec
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Verticle
-import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.eventbus.MessageCodec
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
@@ -205,32 +203,17 @@ open class AbstractBootstrap : AbstractVerticle() {
                         true -> 1
                         else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
                     }
-                    vertx.deployVerticle(clazz, config, instances)
+
+                    val deploymentOptions = deploymentOptionsOf(
+                            config = config,
+                            instances = instances
+                    )
+                    vertx.deployVerticle(clazz, deploymentOptions) { asr ->
+                        if (asr.failed()) {
+                            logger.error(asr.cause()) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
+                            exitProcess(-1)
+                        }
+                    }
                 }
     }
-
-    fun Vertx.deployVerticle(verticle: Class<out Verticle>, config: JsonObject, instances: Int = 1) {
-        (0 until instances).forEach { index ->
-            val options = deploymentOptionsOf(
-                    config = config.copy().put("index", index)
-            )
-            deployVerticle(verticle, options) { asr ->
-                if (asr.failed()) {
-                    logger.error("Vertx 'deployVerticle()' failed. Verticle: $verticle", asr.cause())
-                    exitProcess(-1)
-                }
-            }
-        }
-    }
-}
-
-fun Vertx.registerLocalCodec() {
-    eventBus().unregisterCodec("local")
-    eventBus().registerCodec(object : MessageCodec<Any, Any> {
-        override fun decodeFromWire(pos: Int, buffer: Buffer?) = throw NotImplementedError()
-        override fun encodeToWire(buffer: Buffer?, s: Any?) = throw NotImplementedError()
-        override fun transform(s: Any?) = s
-        override fun name() = "local"
-        override fun systemCodecID(): Byte = -1
-    })
 }
