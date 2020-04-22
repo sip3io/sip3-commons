@@ -56,11 +56,15 @@ open class VertxTest {
         }
     }
 
-    fun findRandomPort() : Int {
+    fun findRandomPort(): Int {
         return ServerSocket(0).use { it.localPort }
     }
 
-    suspend fun Vertx.deployTestVerticle(verticle: KClass<out Verticle>, config: JsonObject = JsonObject()) {
-        deployVerticleAwait(verticle.java.canonicalName, deploymentOptionsOf(config))
+    suspend fun Vertx.deployTestVerticle(verticle: KClass<out Verticle>, config: JsonObject = JsonObject(), instances: Int = 1) {
+        val deploymentOptions = deploymentOptionsOf(
+                config = config,
+                instances = instances
+        )
+        deployVerticleAwait(verticle.java.canonicalName, deploymentOptions)
     }
 }
