@@ -30,6 +30,7 @@ import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
+import io.sip3.commons.vertx.util.localPublish
 import io.sip3.commons.vertx.util.registerLocalCodec
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
@@ -41,7 +42,6 @@ import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
 import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
-import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
 import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
@@ -51,11 +51,6 @@ import kotlin.system.exitProcess
 open class AbstractBootstrap : AbstractVerticle() {
 
     private val logger = KotlinLogging.logger {}
-
-    companion object {
-
-        val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
-    }
 
     open val configLocations = emptyList<String>()
 
@@ -79,7 +74,7 @@ open class AbstractBootstrap : AbstractVerticle() {
         configRetriever.listen { change ->
             val config = change.newConfiguration
             logger.info("Configuration changed:\n ${config.encodePrettily()}")
-            vertx.eventBus().publish(Routes.config_change, config, USE_LOCAL_CODEC)
+            vertx.eventBus().localPublish(Routes.config_change, config)
         }
     }
 
