@@ -16,8 +16,40 @@
 
 package io.sip3.commons.vertx.util
 
+import io.sip3.commons.vertx.util.EventBusUtil.USE_LOCAL_CODEC
+import io.vertx.core.AsyncResult
+import io.vertx.core.Handler
+import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.EventBus
+import io.vertx.core.eventbus.Message
 import io.vertx.core.eventbus.impl.EventBusImpl
+import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
+
+object EventBusUtil {
+
+    val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
+}
+
+fun <T> EventBus.localRequest(address: String,
+                              message: Any,
+                              options: DeliveryOptions? = null,
+                              replyHandler: Handler<AsyncResult<Message<T>>>? = null) {
+    options?.apply {
+        codecName = "local"
+        isLocalOnly = true
+    }
+    request(address, message, options ?: USE_LOCAL_CODEC, replyHandler)
+}
+
+fun EventBus.localPublish(address: String,
+                          message: Any,
+                          options: DeliveryOptions? = null) {
+    options?.apply {
+        codecName = "local"
+        isLocalOnly = true
+    }
+    publish(address, message, options ?: USE_LOCAL_CODEC)
+}
 
 @Suppress("UNCHECKED_CAST")
 fun EventBus.endpoints(): Set<String> {

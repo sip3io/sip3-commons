@@ -17,10 +17,48 @@
 package io.sip3.commons.vertx.util
 
 import io.sip3.commons.vertx.test.VertxTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 class EventBusUtilTest : VertxTest() {
+
+    @Test
+    fun `Check 'localRequest()' method`() {
+        val answer = BigDecimal(42)
+        runTest(
+                execute = {
+                    vertx.eventBus().localRequest<Any>("question", answer)
+                },
+                assert = {
+                    vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
+                        context.verify {
+                            assertEquals(answer, asr.body())
+                        }
+                        context.completeNow()
+                    }
+                }
+        )
+    }
+
+    @Test
+    fun `Check 'localPublish()' method`() {
+        val answer = BigDecimal(42)
+        runTest(
+                execute = {
+                    vertx.eventBus().localPublish("question", answer)
+                },
+                assert = {
+                    vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
+                        context.verify {
+                            assertEquals(answer, asr.body())
+                        }
+                        context.completeNow()
+                    }
+                }
+        )
+    }
 
     @Test
     fun `Define and test event bus endpoints`() {
