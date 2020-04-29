@@ -16,6 +16,7 @@
 
 package io.sip3.commons.vertx.util
 
+import io.sip3.commons.vertx.USE_LOCAL_CODEC
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.DeliveryOptions
@@ -39,21 +40,19 @@ fun <T> EventBus.localRequest(address: String,
                               message: Any,
                               options: DeliveryOptions? = null,
                               replyHandler: Handler<AsyncResult<Message<T>>>? = null) {
-    val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
-    deliveryOptions.apply {
+    options?.apply {
         codecName = "local"
         isLocalOnly = true
     }
-    request(address, message, deliveryOptions, replyHandler)
+    request(address, message, options ?: USE_LOCAL_CODEC, replyHandler)
 }
 
 fun EventBus.localPublish(address: String,
-                              message: Any,
-                              options: DeliveryOptions? = null) {
-    val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
-    deliveryOptions.apply {
+                          message: Any,
+                          options: DeliveryOptions? = null) {
+    options?.apply {
         codecName = "local"
         isLocalOnly = true
     }
-    publish(address, message, deliveryOptions)
+    publish(address, message, options ?: USE_LOCAL_CODEC)
 }
