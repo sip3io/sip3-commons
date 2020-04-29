@@ -16,24 +16,18 @@
 
 package io.sip3.commons.vertx.util
 
-import io.sip3.commons.vertx.USE_LOCAL_CODEC
+import io.sip3.commons.vertx.util.EventBusUtil.USE_LOCAL_CODEC
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.Message
 import io.vertx.core.eventbus.impl.EventBusImpl
+import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
 
-@Suppress("UNCHECKED_CAST")
-fun EventBus.endpoints(): Set<String> {
-    return (this as? EventBusImpl)?.let { eventBus ->
-        // Read protected `handlerMap` field
-        val handlerMapField = EventBusImpl::class.java
-                .getDeclaredField("handlerMap")
-        handlerMapField.isAccessible = true
+object EventBusUtil {
 
-        (handlerMapField.get(eventBus) as? Map<String, Any>)?.let { return it.keys }
-    } ?: emptySet()
+    val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
 }
 
 fun <T> EventBus.localRequest(address: String,
@@ -55,4 +49,16 @@ fun EventBus.localPublish(address: String,
         isLocalOnly = true
     }
     publish(address, message, options ?: USE_LOCAL_CODEC)
+}
+
+@Suppress("UNCHECKED_CAST")
+fun EventBus.endpoints(): Set<String> {
+    return (this as? EventBusImpl)?.let { eventBus ->
+        // Read protected `handlerMap` field
+        val handlerMapField = EventBusImpl::class.java
+                .getDeclaredField("handlerMap")
+        handlerMapField.isAccessible = true
+
+        (handlerMapField.get(eventBus) as? Map<String, Any>)?.let { return it.keys }
+    } ?: emptySet()
 }

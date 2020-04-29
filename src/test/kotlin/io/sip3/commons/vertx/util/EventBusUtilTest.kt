@@ -25,28 +25,6 @@ import java.math.BigDecimal
 class EventBusUtilTest : VertxTest() {
 
     @Test
-    fun `Define and test event bus endpoints`() {
-        runTest(
-                deploy = {
-                    vertx.eventBus().localConsumer<String>("test1") {}
-                    vertx.eventBus().localConsumer<String>("test2") {}
-                },
-                assert = {
-                    vertx.setPeriodic(100) {
-                        val endpoints = vertx.eventBus().endpoints()
-                        context.verify {
-                            if (endpoints.size == 2) {
-                                assertTrue(endpoints.contains("test1"))
-                                assertTrue(endpoints.contains("test2"))
-                                context.completeNow()
-                            }
-                        }
-                    }
-                }
-        )
-    }
-
-    @Test
     fun `Check 'localRequest()' method`() {
         val answer = BigDecimal(42)
         runTest(
@@ -77,6 +55,28 @@ class EventBusUtilTest : VertxTest() {
                             assertEquals(answer, asr.body())
                         }
                         context.completeNow()
+                    }
+                }
+        )
+    }
+
+    @Test
+    fun `Define and test event bus endpoints`() {
+        runTest(
+                deploy = {
+                    vertx.eventBus().localConsumer<String>("test1") {}
+                    vertx.eventBus().localConsumer<String>("test2") {}
+                },
+                assert = {
+                    vertx.setPeriodic(100) {
+                        val endpoints = vertx.eventBus().endpoints()
+                        context.verify {
+                            if (endpoints.size == 2) {
+                                assertTrue(endpoints.contains("test1"))
+                                assertTrue(endpoints.contains("test2"))
+                                context.completeNow()
+                            }
+                        }
                     }
                 }
         )

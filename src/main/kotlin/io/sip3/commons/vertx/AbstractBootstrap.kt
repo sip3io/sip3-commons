@@ -42,14 +42,11 @@ import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
 import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
-import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
 import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
 import java.time.Duration
 import kotlin.system.exitProcess
-
-val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
 
 open class AbstractBootstrap : AbstractVerticle() {
 
