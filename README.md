@@ -16,5 +16,9 @@ To install `sip3-commons` to local Maven repository run the following command:
 mvn clean install
 ```
 
-## 3. Support
+## 3. Documentation
+
+The entire SIP3 Documentation including `Getting Started Guide`, `Installation Guide`, `Features` and `Tutorials` can be fond [here](https://sip3.io/docs/docs/GettingStartedGuide.html).
+
+## 4. Support
 If you have a question about SIP3, just leave us a message in our community [Slack](https://join.slack.com/t/sip3-community/shared_invite/enQtOTIyMjg3NDI0MjU3LWUwYzhlOTFhODYxMTEwNjllYjZjNzc1M2NmM2EyNDM0ZjJmNTVkOTg1MGQ3YmFmNWU5NjlhOGI3MWU1MzUwMjE) and [Telegram](https://t.me/sip3io), or send us an [email](mailto:support@sip3.io). We will be happy to help you.   
