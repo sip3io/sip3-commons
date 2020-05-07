@@ -74,6 +74,10 @@
             <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.sip3</groupId>
+            <artifactId>logback-webhook-appender</artifactId>
+        </dependency>
 
         <!-- Test -->
         <dependency>
