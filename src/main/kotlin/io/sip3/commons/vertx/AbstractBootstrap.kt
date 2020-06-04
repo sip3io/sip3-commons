@@ -174,7 +174,9 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open fun deployVerticles(config: JsonObject) {
-        val reflections = Reflections("io.sip3")
+        val basePackage = config.getJsonObject("vertx")?.getString("base-package") ?: "io.sip3"
+
+        val reflections = Reflections(basePackage)
         reflections.getTypesAnnotatedWith(Instance::class.java)
                 .filter { clazz ->
                     // Filter by 'Verticle' super type
