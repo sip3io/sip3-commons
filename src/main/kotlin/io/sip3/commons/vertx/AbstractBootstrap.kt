@@ -174,43 +174,51 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open fun deployVerticles(config: JsonObject) {
-        val basePackage = config.getJsonObject("vertx")?.getString("base-package") ?: "io.sip3"
+        val packages = mutableListOf<String>().apply {
+            add("io.sip3")
+            config.getJsonObject("vertx")?.getString("base-package")?.let { basePackage ->
+                if (!basePackage.startsWith("io.sip3")) {
+                    add(basePackage)
+                }
+            }
+        }
 
-        val reflections = Reflections(basePackage)
-        reflections.getTypesAnnotatedWith(Instance::class.java)
-                .filter { clazz ->
-                    // Filter by 'Verticle' super type
-                    ReflectionUtils.getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
-                }
-                .filter { clazz ->
-                    // Filter by children
-                    reflections.getSubTypesOf(clazz).isEmpty()
-                }
-                .filter { clazz ->
-                    // Filter by `ConditionalOnProperty` annotation
-                    clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { conditionalOnPropertyAnnotation ->
-                        val pointer = JsonPointer.from(conditionalOnPropertyAnnotation.value)
-                        return@filter pointer.queryJson(config) != null
-                    } ?: true
-                }
-                .filterIsInstance<Class<out Verticle>>()
-                .forEach { clazz ->
-                    val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
-                    val instances = when (instanceAnnotation.singleton) {
-                        true -> 1
-                        else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
+        packages.map { Reflections(it) }.forEach { reflections ->
+            reflections.getTypesAnnotatedWith(Instance::class.java)
+                    .filter { clazz ->
+                        // Filter by 'Verticle' super type
+                        ReflectionUtils.getAllSuperTypes(clazz).map { it.name }.contains("io.vertx.core.Verticle")
                     }
+                    .filter { clazz ->
+                        // Filter by children
+                        reflections.getSubTypesOf(clazz).isEmpty()
+                    }
+                    .filter { clazz ->
+                        // Filter by `ConditionalOnProperty` annotation
+                        clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { conditionalOnPropertyAnnotation ->
+                            val pointer = JsonPointer.from(conditionalOnPropertyAnnotation.value)
+                            return@filter pointer.queryJson(config) != null
+                        } ?: true
+                    }
+                    .filterIsInstance<Class<out Verticle>>()
+                    .forEach { clazz ->
+                        val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
+                        val instances = when (instanceAnnotation.singleton) {
+                            true -> 1
+                            else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
+                        }
 
-                    val deploymentOptions = deploymentOptionsOf(
-                            config = config,
-                            instances = instances
-                    )
-                    vertx.deployVerticle(clazz, deploymentOptions) { asr ->
-                        if (asr.failed()) {
-                            logger.error(asr.cause()) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
-                            exitProcess(-1)
+                        val deploymentOptions = deploymentOptionsOf(
+                                config = config,
+                                instances = instances
+                        )
+                        vertx.deployVerticle(clazz, deploymentOptions) { asr ->
+                            if (asr.failed()) {
+                                logger.error(asr.cause()) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
+                                exitProcess(-1)
+                            }
                         }
                     }
-                }
+        }
     }
 }
