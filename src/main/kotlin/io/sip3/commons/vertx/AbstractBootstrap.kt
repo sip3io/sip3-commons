@@ -58,6 +58,9 @@ open class AbstractBootstrap : AbstractVerticle() {
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
         // Define `local` codec to avoid serialization costs within the application.
         vertx.registerLocalCodec()
+        vertx.exceptionHandler { t ->
+            logger.error(t) { "Got unhandled exception." }
+        }
 
         val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions())
         configRetriever.getConfig { asr ->
