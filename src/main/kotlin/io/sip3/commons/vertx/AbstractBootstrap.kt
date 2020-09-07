@@ -42,6 +42,7 @@ import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
 import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
+import io.vertx.micrometer.backends.BackendRegistries
 import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
@@ -108,6 +109,12 @@ open class AbstractBootstrap : AbstractVerticle() {
         val registry = Metrics.globalRegistry
         config.getString("name")?.let { name ->
             registry.config().commonTags("name", name)
+
+            if (vertx.isMetricsEnabled) {
+                BackendRegistries.getDefaultNow()
+                        .config()
+                        .commonTags("name", name)
+            }
         }
         config.getJsonObject("metrics")?.let { meters ->
 
