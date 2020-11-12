@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.vertx.util
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.sip3.commons.domain.SdpSession
+import io.sip3.commons.util.IpUtil
 
-class SdpSession {
+fun SdpSession.id(): Long {
+    return SdpSessionUtil.sessionId(address, rtpPort)
+}
 
-    var timestamp: Long = 0
-
-    lateinit var address: String
-    @JsonProperty("rtp_port")
-    var rtpPort: Int = -1
-    @JsonProperty("rtcp_port")
-    var rtcpPort: Int? = null
-
-    lateinit var codecs: MutableList<Codec>
-    var ptime: Int = 20
-
-    @JsonProperty("call_id")
-    lateinit var callId: String
-
-    fun codec(payloadType: Int): Codec? {
-        return codecs.firstOrNull { it.payloadTypes.contains(payloadType) }
+object SdpSessionUtil {
+    fun sessionId(address: String, port: Int): Long {
+        return (IpUtil.convertToInt(address).toLong() shl 32) or port.toLong()
     }
 }

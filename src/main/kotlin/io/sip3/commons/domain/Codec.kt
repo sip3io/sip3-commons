@@ -22,8 +22,8 @@ class Codec {
 
     var name: String = "UNDEFINED"
 
-    @JsonProperty("payload_type")
-    var payloadType: Byte = -1
+    @JsonProperty("payload_types")
+    var payloadTypes: List<Int> = listOf(-1)
 
     @JsonProperty("clock_rate")
     var clockRate: Int = 8000
