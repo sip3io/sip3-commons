@@ -19,8 +19,12 @@ package io.sip3.commons.vertx.util
 import io.sip3.commons.domain.SdpSession
 import io.sip3.commons.util.IpUtil
 
-fun SdpSession.id(): Long {
+fun SdpSession.rtpId(): Long {
     return SdpSessionUtil.sessionId(address, rtpPort)
+}
+
+fun SdpSession.rtcpId(): Long {
+    return SdpSessionUtil.sessionId(address, rtcpPort)
 }
 
 object SdpSessionUtil {

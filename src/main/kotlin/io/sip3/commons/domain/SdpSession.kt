@@ -26,7 +26,7 @@ class SdpSession {
     @JsonProperty("rtp_port")
     var rtpPort: Int = -1
     @JsonProperty("rtcp_port")
-    var rtcpPort: Int? = null
+    var rtcpPort: Int = -1
 
     lateinit var codecs: MutableList<Codec>
     var ptime: Int = 20
