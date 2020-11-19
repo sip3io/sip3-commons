@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.vertx.util
+package io.sip3.commons.util
 
-import io.sip3.commons.domain.SdpSession
-import io.sip3.commons.util.IpUtil
+object MediaUtil {
 
-fun SdpSession.rtpId(): Long {
-    return SdpSessionUtil.sessionId(address, rtpPort)
-}
+    fun rtpSessionId(srcPort: Int, dstPort: Int, ssrc: Long): Long {
+        return (srcPort.toLong() shl 48) or (dstPort.toLong() shl 32) or ssrc
+    }
 
-fun SdpSession.rtcpId(): Long {
-    return SdpSessionUtil.sessionId(address, rtcpPort)
-}
-
-object SdpSessionUtil {
-    fun sessionId(address: String, port: Int): Long {
-        return (IpUtil.convertToInt(address).toLong() shl 32) or port.toLong()
+    fun sdpSessionId(address: String, port: Int): Long {
+        try {
+            return (IpUtil.convertToInt(address).toLong() shl 32) or port.toLong()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Couldn't retrieve session ID. Address: $address, Port: $port", e)
+        }
     }
 }

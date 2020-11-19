@@ -46,18 +46,25 @@ class SdpSessionTest {
         JsonObject.mapFrom(sdpSession).apply {
             assertEquals(7, size())
             assertEquals(sdpSession.timestamp, getLong("timestamp"))
-            assertEquals(sdpSession.callId, getString("call_id"))
-            assertEquals(sdpSession.ptime, getInteger("ptime"))
+
+            assertEquals(sdpSession.address, getString("address"))
+            assertEquals(sdpSession.rtpPort, getInteger("rtp_port"))
+            assertEquals(sdpSession.rtcpPort, getInteger("rtcp_port"))
 
             val codec = sdpSession.codecs.first()
             getJsonArray("codecs").getJsonObject(0).apply {
-                assertEquals(codec.payloadTypes.first(), getJsonArray("payload_types").getInteger(0))
                 assertEquals(codec.name, getString("name"))
+
+                assertEquals(codec.payloadTypes.size, getJsonArray("payload_types").size())
+                assertEquals(codec.payloadTypes.first(), getJsonArray("payload_types").getInteger(0))
 
                 assertEquals(codec.clockRate, getInteger("clock_rate"))
                 assertEquals(codec.ie, getFloat("ie"))
                 assertEquals(codec.bpl, getFloat("bpl"))
             }
+
+            assertEquals(sdpSession.ptime, getInteger("ptime"))
+            assertEquals(sdpSession.callId, getString("call_id"))
         }
     }
 
