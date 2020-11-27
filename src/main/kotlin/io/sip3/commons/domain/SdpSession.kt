@@ -30,7 +30,7 @@ class SdpSession {
     @JsonProperty("rtcp_port")
     var rtcpPort: Int = -1
 
-    lateinit var codecs: MutableList<Codec>
+    lateinit var codecs: List<Codec>
     var ptime: Int = 20
 
     @JsonProperty("call_id")
