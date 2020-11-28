@@ -16,16 +16,37 @@
 
 package io.sip3.commons.domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.sip3.commons.util.MediaUtil
 
 class SdpSession {
 
-    var id: Long = 0
     var timestamp: Long = 0
 
-    lateinit var codec: Codec
+    lateinit var address: String
+    @JsonProperty("rtp_port")
+    var rtpPort: Int = 0
+    @JsonProperty("rtcp_port")
+    var rtcpPort: Int = 0
+
+    lateinit var codecs: List<Codec>
     var ptime: Int = 20
 
     @JsonProperty("call_id")
     lateinit var callId: String
+
+    @get:JsonIgnore
+    val rtpId by lazy {
+        MediaUtil.sdpSessionId(address, rtpPort)
+    }
+
+    @get:JsonIgnore
+    val rtcpId by lazy {
+        MediaUtil.sdpSessionId(address, rtcpPort)
+    }
+
+    fun codec(payloadType: Int): Codec? {
+        return codecs.firstOrNull { it.payloadTypes.contains(payloadType) }
+    }
 }

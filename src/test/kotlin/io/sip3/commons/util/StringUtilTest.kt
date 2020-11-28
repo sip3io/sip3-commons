@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.util
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Test
 
-class Codec {
+class StringUtilTest {
 
-    var name: String = "UNDEFINED"
+    @Test
+    fun `Parse IntRange`() {
+        assertEquals((0..127), "0..127".toIntRange())
+        assertEquals((0..1024), "0..1024".toIntRange())
+        assertEquals((-1000..1000), "-1000..1000".toIntRange())
 
-    @JsonProperty("payload_types")
-    lateinit var payloadTypes: List<Int>
-
-    @JsonProperty("clock_rate")
-    var clockRate: Int = 8000
-
-    var ie: Float = 5.0F
-    var bpl: Float = 10.0F
+        assertThrows(IllegalArgumentException::class.java) { "0..a".toIntRange() }
+    }
 }

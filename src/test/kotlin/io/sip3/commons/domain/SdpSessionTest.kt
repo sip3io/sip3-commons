@@ -25,64 +25,72 @@ class SdpSessionTest {
     @Test
     fun `Serialization to JSON`() {
         val sdpSession = SdpSession().apply {
-            id = 1000L
             timestamp = System.currentTimeMillis()
 
-            codec = Codec().apply {
-                payloadType = 0
+            address = "127.0.0.1"
+            rtpPort = 1000
+            rtcpPort = 1001
+
+            codecs = mutableListOf(Codec().apply {
+                payloadTypes = listOf(0)
                 name = "PCMU"
                 clockRate = 8000
                 ie = 0F
                 bpl = 4.3F
-            }
+            })
             ptime = 30
 
             callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
         }
 
         JsonObject.mapFrom(sdpSession).apply {
-            assertEquals(5, size())
-            assertEquals(sdpSession.id, getLong("id"))
+            assertEquals(7, size())
             assertEquals(sdpSession.timestamp, getLong("timestamp"))
-            assertEquals(sdpSession.callId, getString("call_id"))
-            assertEquals(sdpSession.ptime, getInteger("ptime"))
 
-            val codec = sdpSession.codec
-            getJsonObject("codec").apply {
-                assertEquals(codec.payloadType, getInteger("payload_type").toByte())
+            assertEquals(sdpSession.address, getString("address"))
+            assertEquals(sdpSession.rtpPort, getInteger("rtp_port"))
+            assertEquals(sdpSession.rtcpPort, getInteger("rtcp_port"))
+
+            val codec = sdpSession.codecs.first()
+            getJsonArray("codecs").getJsonObject(0).apply {
                 assertEquals(codec.name, getString("name"))
+
+                assertEquals(codec.payloadTypes.size, getJsonArray("payload_types").size())
+                assertEquals(codec.payloadTypes.first(), getJsonArray("payload_types").getInteger(0))
 
                 assertEquals(codec.clockRate, getInteger("clock_rate"))
                 assertEquals(codec.ie, getFloat("ie"))
                 assertEquals(codec.bpl, getFloat("bpl"))
             }
+
+            assertEquals(sdpSession.ptime, getInteger("ptime"))
+            assertEquals(sdpSession.callId, getString("call_id"))
         }
     }
 
     @Test
     fun `Deserialization from JSON`() {
         val jsonObject = JsonObject().apply {
-            put("id", 1000L)
             put("timestamp", System.currentTimeMillis())
 
-            put("codec", JsonObject().apply {
-                put("payload_type", 0)
+            put("codecs", listOf(JsonObject().apply {
+                put("payload_types", listOf(0))
                 put("name", "PCMU")
                 put("clock_rate", 8000)
                 put("ie", 0F)
                 put("bpl", 4.3F)
-            })
+            }))
             put("ptime", 30)
 
             put("call_id", "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com")
         }
 
         jsonObject.mapTo(SdpSession::class.java).apply {
-            assertEquals(jsonObject.getLong("id"), id)
             assertEquals(jsonObject.getLong("timestamp"), timestamp)
 
-            jsonObject.getJsonObject("codec").apply {
-                assertEquals(getInteger("payload_type").toByte(), codec.payloadType)
+            jsonObject.getJsonArray("codecs").getJsonObject(0).apply {
+                val codec = codecs.first()
+                assertEquals(getJsonArray("payload_types").getInteger(0), codec.payloadTypes.first())
                 assertEquals(getString("name"), codec.name)
                 assertEquals(getInteger("clock_rate"), codec.clockRate)
                 assertEquals(getFloat("ie"), codec.ie)

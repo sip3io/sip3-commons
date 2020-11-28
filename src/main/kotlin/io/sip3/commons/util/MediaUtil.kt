@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.util
 
-import com.fasterxml.jackson.annotation.JsonProperty
+object MediaUtil {
 
-class Codec {
+    fun rtpSessionId(srcPort: Int, dstPort: Int, ssrc: Long): Long {
+        return (srcPort.toLong() shl 48) or (dstPort.toLong() shl 32) or ssrc
+    }
 
-    var name: String = "UNDEFINED"
-
-    @JsonProperty("payload_types")
-    lateinit var payloadTypes: List<Int>
-
-    @JsonProperty("clock_rate")
-    var clockRate: Int = 8000
-
-    var ie: Float = 5.0F
-    var bpl: Float = 10.0F
+    fun sdpSessionId(address: String, port: Int): Long {
+        try {
+            return (IpUtil.convertToInt(address).toLong() shl 32) or port.toLong()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Couldn't retrieve session ID. Address: $address, Port: $port", e)
+        }
+    }
 }

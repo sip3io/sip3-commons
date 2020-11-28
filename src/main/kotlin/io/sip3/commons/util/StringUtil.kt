@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.util
 
-import com.fasterxml.jackson.annotation.JsonProperty
+fun String.toIntRange(): IntRange {
+    val values = this.split("..")
+    if (values.size == 2) {
+        return IntRange(values.first().toInt(), values.last().toInt())
+    }
 
-class Codec {
-
-    var name: String = "UNDEFINED"
-
-    @JsonProperty("payload_types")
-    lateinit var payloadTypes: List<Int>
-
-    @JsonProperty("clock_rate")
-    var clockRate: Int = 8000
-
-    var ie: Float = 5.0F
-    var bpl: Float = 10.0F
+    throw IllegalArgumentException("Invalid IntRange: '$this'")
 }
