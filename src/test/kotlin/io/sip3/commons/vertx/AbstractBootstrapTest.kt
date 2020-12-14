@@ -66,110 +66,110 @@ class AbstractBootstrapTest : VertxTest() {
     @Test
     fun `Check auto deployment`() {
         runTest(
-                deploy = {
-                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
-                        put("D", JsonObject().apply {
-                            put("D", true)
-                        })
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("D", JsonObject().apply {
+                        put("D", true)
                     })
-                },
-                execute = {
-                    // Do nothing...
-                },
-                assert = {
-                    vertx.setPeriodic(100) {
-                        val endpoints = vertx.eventBus().endpoints()
-                        if (endpoints.size == 2) {
-                            context.verify {
-                                assertTrue(endpoints.contains("B"))
-                                assertTrue(endpoints.contains("D"))
-                            }
-                            context.completeNow()
+                })
+            },
+            execute = {
+                // Do nothing...
+            },
+            assert = {
+                vertx.setPeriodic(100) {
+                    val endpoints = vertx.eventBus().endpoints()
+                    if (endpoints.size == 2) {
+                        context.verify {
+                            assertTrue(endpoints.contains("B"))
+                            assertTrue(endpoints.contains("D"))
                         }
+                        context.completeNow()
                     }
                 }
+            }
         )
     }
 
     @Test
     fun `Retrieve InfluxDB counters`() {
         runTest(
-                deploy = {
-                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
-                        put("metrics", JsonObject().apply {
-                            put("influxdb", JsonObject().apply {
-                                put("uri", "http://127.0.0.1:8086")
-                                put("step", 1000)
-                            })
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("metrics", JsonObject().apply {
+                        put("influxdb", JsonObject().apply {
+                            put("uri", "http://127.0.0.1:8086")
+                            put("step", 1000)
                         })
                     })
-                },
-                execute = {
-                    vertx.setPeriodic(100) { Metrics.counter("test").increment() }
-                },
-                assert = {
-                    val server = vertx.createHttpServer()
-                    server.requestHandler { request ->
-                        request.response().end("OK")
-                        context.completeNow()
-                    }
-                    server.listen(8086)
+                })
+            },
+            execute = {
+                vertx.setPeriodic(100) { Metrics.counter("test").increment() }
+            },
+            assert = {
+                val server = vertx.createHttpServer()
+                server.requestHandler { request ->
+                    request.response().end("OK")
+                    context.completeNow()
                 }
+                server.listen(8086)
+            }
         )
     }
 
     @Test
     fun `Retrieve Datadog counters`() {
         runTest(
-                deploy = {
-                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
-                        put("metrics", JsonObject().apply {
-                            put("statsd", JsonObject().apply {
-                                put("host", "127.0.0.1")
-                                put("port", 8125)
-                                put("step", 1000)
-                            })
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("metrics", JsonObject().apply {
+                        put("statsd", JsonObject().apply {
+                            put("host", "127.0.0.1")
+                            put("port", 8125)
+                            put("step", 1000)
                         })
                     })
-                },
-                execute = {
-                    vertx.setPeriodic(100) { Metrics.counter("test").increment() }
-                },
-                assert = {
-                    val socket = vertx.createDatagramSocket(DatagramSocketOptions())
-                    socket.listen(8125, "0.0.0.0") { connection ->
-                        if (connection.succeeded()) {
-                            socket.handler { context.completeNow() }
-                        }
+                })
+            },
+            execute = {
+                vertx.setPeriodic(100) { Metrics.counter("test").increment() }
+            },
+            assert = {
+                val socket = vertx.createDatagramSocket(DatagramSocketOptions())
+                socket.listen(8125, "0.0.0.0") { connection ->
+                    if (connection.succeeded()) {
+                        socket.handler { context.completeNow() }
                     }
                 }
+            }
         )
     }
 
     @Test
     fun `Retrieve ELK counters`() {
         runTest(
-                deploy = {
-                    vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
-                        put("metrics", JsonObject().apply {
-                            put("elastic", JsonObject().apply {
-                                put("host", "http://127.0.0.1:9200")
-                                put("step", 1000)
-                            })
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("metrics", JsonObject().apply {
+                        put("elastic", JsonObject().apply {
+                            put("host", "http://127.0.0.1:9200")
+                            put("step", 1000)
                         })
                     })
-                },
-                execute = {
-                    vertx.setPeriodic(100) { Metrics.counter("test").increment() }
-                },
-                assert = {
-                    val server = vertx.createHttpServer()
-                    server.requestHandler { request ->
-                        request.response().end("OK")
-                        context.completeNow()
-                    }
-                    server.listen(9200)
+                })
+            },
+            execute = {
+                vertx.setPeriodic(100) { Metrics.counter("test").increment() }
+            },
+            assert = {
+                val server = vertx.createHttpServer()
+                server.requestHandler { request ->
+                    request.response().end("OK")
+                    context.completeNow()
                 }
+                server.listen(9200)
+            }
         )
     }
 }

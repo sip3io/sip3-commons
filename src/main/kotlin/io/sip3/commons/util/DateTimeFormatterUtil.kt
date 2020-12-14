@@ -27,5 +27,5 @@ fun DateTimeFormatter.format(timestamp: Timestamp): String {
 
 fun DateTimeFormatter.format(millis: Long): String {
     return Instant.ofEpochMilli(millis)
-            .atZone(ZoneOffset.UTC).toLocalDateTime().format(this)
+        .atZone(ZoneOffset.UTC).toLocalDateTime().format(this)
 }
