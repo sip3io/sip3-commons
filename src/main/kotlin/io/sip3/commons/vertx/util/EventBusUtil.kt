@@ -29,10 +29,12 @@ object EventBusUtil {
     val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
 }
 
-fun <T> EventBus.localRequest(address: String,
-                              message: Any,
-                              options: DeliveryOptions? = null,
-                              replyHandler: ((AsyncResult<Message<T>>) -> Unit)? = null) {
+fun <T> EventBus.localRequest(
+    address: String,
+    message: Any,
+    options: DeliveryOptions? = null,
+    replyHandler: ((AsyncResult<Message<T>>) -> Unit)? = null
+) {
     val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
     deliveryOptions.apply {
         codecName = "local"
@@ -41,9 +43,11 @@ fun <T> EventBus.localRequest(address: String,
     request(address, message, deliveryOptions, replyHandler)
 }
 
-fun EventBus.localPublish(address: String,
-                          message: Any,
-                          options: DeliveryOptions? = null) {
+fun EventBus.localPublish(
+    address: String,
+    message: Any,
+    options: DeliveryOptions? = null
+) {
     options?.apply {
         codecName = "local"
         isLocalOnly = true
@@ -56,7 +60,7 @@ fun EventBus.endpoints(): Set<String> {
     return (this as? EventBusImpl)?.let { eventBus ->
         // Read protected `handlerMap` field
         val handlerMapField = EventBusImpl::class.java
-                .getDeclaredField("handlerMap")
+            .getDeclaredField("handlerMap")
         handlerMapField.isAccessible = true
 
         (handlerMapField.get(eventBus) as? Map<String, Any>)?.let { return it.keys }

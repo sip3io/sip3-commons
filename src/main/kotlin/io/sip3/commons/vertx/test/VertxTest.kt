@@ -39,8 +39,10 @@ open class VertxTest {
     lateinit var context: VertxTestContext
     lateinit var vertx: Vertx
 
-    fun runTest(deploy: (suspend () -> Unit)? = null, execute: (suspend () -> Unit)? = null,
-                assert: (suspend () -> Unit)? = null, cleanup: (() -> Unit)? = null, timeout: Long = 10) {
+    fun runTest(
+        deploy: (suspend () -> Unit)? = null, execute: (suspend () -> Unit)? = null,
+        assert: (suspend () -> Unit)? = null, cleanup: (() -> Unit)? = null, timeout: Long = 10
+    ) {
         context = VertxTestContext()
         vertx = Vertx.vertx()
         vertx.registerLocalCodec()
@@ -62,8 +64,8 @@ open class VertxTest {
 
     suspend fun Vertx.deployTestVerticle(verticle: KClass<out Verticle>, config: JsonObject = JsonObject(), instances: Int = 1) {
         val deploymentOptions = deploymentOptionsOf(
-                config = config,
-                instances = instances
+            config = config,
+            instances = instances
         )
         deployVerticleAwait(verticle.java.canonicalName, deploymentOptions)
     }

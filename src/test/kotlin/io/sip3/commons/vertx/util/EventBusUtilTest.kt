@@ -28,17 +28,17 @@ class EventBusUtilTest : VertxTest() {
     fun `Check 'localRequest()' method`() {
         val answer = BigDecimal(42)
         runTest(
-                execute = {
-                    vertx.eventBus().localRequest<Any>("question", answer)
-                },
-                assert = {
-                    vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
-                        context.verify {
-                            assertEquals(answer, asr.body())
-                        }
-                        context.completeNow()
+            execute = {
+                vertx.eventBus().localRequest<Any>("question", answer)
+            },
+            assert = {
+                vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
+                    context.verify {
+                        assertEquals(answer, asr.body())
                     }
+                    context.completeNow()
                 }
+            }
         )
     }
 
@@ -46,39 +46,39 @@ class EventBusUtilTest : VertxTest() {
     fun `Check 'localPublish()' method`() {
         val answer = BigDecimal(42)
         runTest(
-                execute = {
-                    vertx.eventBus().localPublish("question", answer)
-                },
-                assert = {
-                    vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
-                        context.verify {
-                            assertEquals(answer, asr.body())
-                        }
-                        context.completeNow()
+            execute = {
+                vertx.eventBus().localPublish("question", answer)
+            },
+            assert = {
+                vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
+                    context.verify {
+                        assertEquals(answer, asr.body())
                     }
+                    context.completeNow()
                 }
+            }
         )
     }
 
     @Test
     fun `Define and test event bus endpoints`() {
         runTest(
-                deploy = {
-                    vertx.eventBus().localConsumer<String>("test1") {}
-                    vertx.eventBus().localConsumer<String>("test2") {}
-                },
-                assert = {
-                    vertx.setPeriodic(100) {
-                        val endpoints = vertx.eventBus().endpoints()
-                        context.verify {
-                            if (endpoints.size == 2) {
-                                assertTrue(endpoints.contains("test1"))
-                                assertTrue(endpoints.contains("test2"))
-                                context.completeNow()
-                            }
+            deploy = {
+                vertx.eventBus().localConsumer<String>("test1") {}
+                vertx.eventBus().localConsumer<String>("test2") {}
+            },
+            assert = {
+                vertx.setPeriodic(100) {
+                    val endpoints = vertx.eventBus().endpoints()
+                    context.verify {
+                        if (endpoints.size == 2) {
+                            assertTrue(endpoints.contains("test1"))
+                            assertTrue(endpoints.contains("test2"))
+                            context.completeNow()
                         }
                     }
                 }
+            }
         )
     }
 }
