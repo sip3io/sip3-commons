@@ -30,10 +30,8 @@ object EventBusUtil {
 }
 
 fun <T> EventBus.localRequest(
-    address: String,
-    message: Any,
-    options: DeliveryOptions? = null,
-    replyHandler: ((AsyncResult<Message<T>>) -> Unit)? = null
+    address: String, message: Any, options: DeliveryOptions? = null,
+    replyHandler: ((AsyncResult<Message<T>>) -> Unit) = {}
 ) {
     val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
     deliveryOptions.apply {
@@ -43,11 +41,7 @@ fun <T> EventBus.localRequest(
     request(address, message, deliveryOptions, replyHandler)
 }
 
-fun EventBus.localPublish(
-    address: String,
-    message: Any,
-    options: DeliveryOptions? = null
-) {
+fun EventBus.localPublish(address: String, message: Any, options: DeliveryOptions? = null) {
     options?.apply {
         codecName = "local"
         isLocalOnly = true
