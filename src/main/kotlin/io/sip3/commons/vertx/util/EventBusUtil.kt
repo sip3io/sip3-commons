@@ -57,6 +57,6 @@ fun EventBus.endpoints(): Set<String> {
             .getDeclaredField("handlerMap")
         handlerMapField.isAccessible = true
 
-        (handlerMapField.get(eventBus) as? Map<String, Any>)?.let { return it.keys }
+        (handlerMapField.get(eventBus) as? Map<String, Any>)?.keys
     } ?: emptySet()
 }
