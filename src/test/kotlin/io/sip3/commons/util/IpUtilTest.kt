@@ -16,8 +16,8 @@
 
 package io.sip3.commons.util
 
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.net.InetAddress
 
@@ -31,7 +31,7 @@ class IpUtilTest {
 
     @Test
     fun `Convert invalid address to Int`() {
-        Assertions.assertThrows(UnsupportedOperationException::class.java) {
+        assertThrows(UnsupportedOperationException::class.java) {
             val addr = byteArrayOf(0x01, 0x02, 0x03)
             IpUtil.convertToInt(addr)
         }
@@ -44,7 +44,7 @@ class IpUtilTest {
 
     @Test
     fun `Convert invalid string address to Int`() {
-        Assertions.assertThrows(UnsupportedOperationException::class.java) {
+        assertThrows(UnsupportedOperationException::class.java) {
             IpUtil.convertToInt("23.8.20")
         }
     }
@@ -57,7 +57,7 @@ class IpUtilTest {
 
     @Test
     fun `Convert invalid address to String`() {
-        Assertions.assertThrows(UnsupportedOperationException::class.java) {
+        assertThrows(UnsupportedOperationException::class.java) {
             val addr = byteArrayOf(0x01, 0x02, 0x03)
             IpUtil.convertToString(addr)
         }
