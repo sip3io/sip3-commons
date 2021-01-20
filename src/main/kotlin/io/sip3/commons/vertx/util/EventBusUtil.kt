@@ -38,7 +38,7 @@ fun <T> EventBus.localRequest(address: String, message: Any, options: DeliveryOp
     request(address, message, deliveryOptions, replyHandler)
 }
 
-fun <T> EventBus.localSend(address: String, message: Any, options: DeliveryOptions? = null) {
+fun EventBus.localSend(address: String, message: Any, options: DeliveryOptions? = null) {
     val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
     deliveryOptions.apply {
         codecName = "local"

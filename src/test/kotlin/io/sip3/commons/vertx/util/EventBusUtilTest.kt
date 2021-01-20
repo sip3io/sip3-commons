@@ -47,7 +47,7 @@ class EventBusUtilTest : VertxTest() {
         val answer = BigDecimal(42)
         runTest(
             execute = {
-                vertx.eventBus().localSend<Any>("question", answer)
+                vertx.eventBus().localSend("question", answer)
             },
             assert = {
                 vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
