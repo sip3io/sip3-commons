@@ -29,16 +29,22 @@ object EventBusUtil {
     val USE_LOCAL_CODEC = deliveryOptionsOf(codecName = "local", localOnly = true)
 }
 
-fun <T> EventBus.localRequest(
-    address: String, message: Any, options: DeliveryOptions? = null,
-    replyHandler: ((AsyncResult<Message<T>>) -> Unit) = {}
-) {
+fun <T> EventBus.localRequest(address: String, message: Any, options: DeliveryOptions? = null, replyHandler: ((AsyncResult<Message<T>>) -> Unit)) {
     val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
     deliveryOptions.apply {
         codecName = "local"
         isLocalOnly = true
     }
     request(address, message, deliveryOptions, replyHandler)
+}
+
+fun <T> EventBus.localSend(address: String, message: Any, options: DeliveryOptions? = null) {
+    val deliveryOptions = options?.let { DeliveryOptions(options) } ?: DeliveryOptions()
+    deliveryOptions.apply {
+        codecName = "local"
+        isLocalOnly = true
+    }
+    send(address, message, deliveryOptions)
 }
 
 fun EventBus.localPublish(address: String, message: Any, options: DeliveryOptions? = null) {

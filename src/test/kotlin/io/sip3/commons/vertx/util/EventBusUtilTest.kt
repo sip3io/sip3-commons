@@ -29,7 +29,25 @@ class EventBusUtilTest : VertxTest() {
         val answer = BigDecimal(42)
         runTest(
             execute = {
-                vertx.eventBus().localRequest<Any>("question", answer)
+                vertx.eventBus().localRequest<Any>("question", answer) { asr -> asr.succeeded() }
+            },
+            assert = {
+                vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
+                    context.verify {
+                        assertEquals(answer, asr.body())
+                    }
+                    context.completeNow()
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Check 'localSend()' method`() {
+        val answer = BigDecimal(42)
+        runTest(
+            execute = {
+                vertx.eventBus().localSend<Any>("question", answer)
             },
             assert = {
                 vertx.eventBus().localConsumer<BigDecimal>("question") { asr ->
