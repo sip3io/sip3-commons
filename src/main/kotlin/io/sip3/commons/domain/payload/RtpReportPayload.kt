@@ -60,7 +60,7 @@ class RtpReportPayload : Encodable, Decodable {
 
     var source: Byte = -1
 
-    var payloadType: Byte = 0
+    var payloadType: Byte = -1
     var ssrc: Long = 0
     var callId: String? = null
     var codecName: String? = null
