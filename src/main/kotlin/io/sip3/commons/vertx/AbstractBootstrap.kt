@@ -42,7 +42,11 @@ import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
 import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
+import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.micrometer.backends.BackendRegistries
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
@@ -72,7 +76,9 @@ open class AbstractBootstrap : AbstractVerticle() {
                 val config = asr.result().mergeIn(config())
                 logger.info("Configuration:\n ${config.encodePrettily()}")
                 deployMeterRegistries(config)
-                deployVerticles(config)
+                GlobalScope.launch(vertx.dispatcher()) {
+                    deployVerticles(config)
+                }
             }
         }
         configRetriever.listen { change ->
@@ -183,7 +189,7 @@ open class AbstractBootstrap : AbstractVerticle() {
         }
     }
 
-    open fun deployVerticles(config: JsonObject) {
+    open suspend fun deployVerticles(config: JsonObject) {
         val packages = mutableListOf<String>().apply {
             add("io.sip3")
             config.getJsonObject("vertx")?.getString("base-package")?.let { basePackage ->
@@ -193,7 +199,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             }
         }
 
-        packages.map { Reflections(it) }.forEach { reflections ->
+        packages.map { Reflections(it) }.flatMap { reflections ->
             reflections.getTypesAnnotatedWith(Instance::class.java)
                 .filter { clazz ->
                     // Filter by 'Verticle' super type
@@ -211,24 +217,27 @@ open class AbstractBootstrap : AbstractVerticle() {
                     } ?: true
                 }
                 .filterIsInstance<Class<out Verticle>>()
-                .forEach { clazz ->
-                    val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
-                    val instances = when (instanceAnnotation.singleton) {
-                        true -> 1
-                        else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
-                    }
+        }.sortedBy { clazz ->
+            // Sort by `Instance` order
+            val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
+            return@sortedBy instanceAnnotation.order
+        }.forEach { clazz ->
+            val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
+            val instances = when (instanceAnnotation.singleton) {
+                true -> 1
+                else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
+            }
 
-                    val deploymentOptions = deploymentOptionsOf(
-                        config = config,
-                        instances = instances
-                    )
-                    vertx.deployVerticle(clazz, deploymentOptions) { asr ->
-                        if (asr.failed()) {
-                            logger.error(asr.cause()) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
-                            exitProcess(-1)
-                        }
-                    }
-                }
+            val deploymentOptions = deploymentOptionsOf(
+                config = config,
+                instances = instances
+            )
+            try {
+                vertx.deployVerticle(clazz, deploymentOptions).await()
+            } catch (e: Exception) {
+                logger.error(e) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
+                exitProcess(-1)
+            }
         }
     }
 }
