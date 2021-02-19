@@ -35,4 +35,7 @@ object PacketTypes {
 
     // Short Message Peer-to-Peer
     const val SMPP: Byte = 6
+
+    // Recording (Internal SIP3 protocol)
+    const val REC: Byte = 7
 }
