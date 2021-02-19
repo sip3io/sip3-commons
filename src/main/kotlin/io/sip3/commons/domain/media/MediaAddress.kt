@@ -22,7 +22,7 @@ import io.sip3.commons.util.MediaUtil
 
 class MediaAddress {
 
-    lateinit var address: String
+    lateinit var addr: String
 
     @JsonProperty("rtp_port")
     var rtpPort: Int = 0
@@ -32,11 +32,11 @@ class MediaAddress {
 
     @get:JsonIgnore
     val rtpId by lazy {
-        MediaUtil.sdpSessionId(address, rtpPort)
+        MediaUtil.sdpSessionId(addr, rtpPort)
     }
 
     @get:JsonIgnore
     val rtcpId by lazy {
-        MediaUtil.sdpSessionId(address, rtcpPort)
+        MediaUtil.sdpSessionId(addr, rtcpPort)
     }
 }

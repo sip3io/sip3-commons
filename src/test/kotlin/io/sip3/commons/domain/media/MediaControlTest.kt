@@ -24,47 +24,73 @@ class MediaControlTest {
 
     @Test
     fun `Serialization to JSON`() {
-        val sdpSession = MediaControl().apply {
+        val mediaControl = MediaControl().apply {
             timestamp = System.currentTimeMillis()
 
-            address = "127.0.0.1"
-            rtpPort = 1000
-            rtcpPort = 1001
-
-            codecs = mutableListOf(Codec().apply {
-                payloadTypes = listOf(0)
-                name = "PCMU"
-                clockRate = 8000
-                ie = 0F
-                bpl = 4.3F
-            })
-            ptime = 30
-
             callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
-        }
 
-        JsonObject.mapFrom(sdpSession).apply {
-            assertEquals(7, size())
-            assertEquals(sdpSession.timestamp, getLong("timestamp"))
+            sdpSession = SdpSession().apply {
+                src = MediaAddress().apply {
+                    addr = "127.0.0.1"
+                    rtpPort = 1000
+                    rtcpPort = 1001
+                }
 
-            assertEquals(sdpSession.address, getString("address"))
-            assertEquals(sdpSession.rtpPort, getInteger("rtp_port"))
-            assertEquals(sdpSession.rtcpPort, getInteger("rtcp_port"))
+                dst = MediaAddress().apply {
+                    addr = "127.0.0.2"
+                    rtpPort = 2000
+                    rtcpPort = 2001
+                }
 
-            val codec = sdpSession.codecs.first()
-            getJsonArray("codecs").getJsonObject(0).apply {
-                assertEquals(codec.name, getString("name"))
+                codecs = mutableListOf(Codec().apply {
+                    payloadTypes = listOf(0)
+                    name = "PCMU"
+                    clockRate = 8000
+                    ie = 0F
+                    bpl = 4.3F
+                })
 
-                assertEquals(codec.payloadTypes.size, getJsonArray("payload_types").size())
-                assertEquals(codec.payloadTypes.first(), getJsonArray("payload_types").getInteger(0))
-
-                assertEquals(codec.clockRate, getInteger("clock_rate"))
-                assertEquals(codec.ie, getFloat("ie"))
-                assertEquals(codec.bpl, getFloat("bpl"))
+                ptime = 30
             }
 
-            assertEquals(sdpSession.ptime, getInteger("ptime"))
-            assertEquals(sdpSession.callId, getString("call_id"))
+            recording = Recording()
+        }
+
+        JsonObject.mapFrom(mediaControl).apply {
+            assertEquals(4, size())
+            assertEquals(mediaControl.timestamp, getLong("timestamp"))
+
+            assertEquals(mediaControl.callId, getString("call_id"))
+
+            getJsonObject("sdp_session").apply {
+                val srcJsonObject = getJsonObject("src")
+                val src = mediaControl.sdpSession.src
+                assertEquals(src.addr, srcJsonObject.getString("addr"))
+                assertEquals(src.rtpPort, srcJsonObject.getInteger("rtp_port"))
+                assertEquals(src.rtcpPort, srcJsonObject.getInteger("rtcp_port"))
+
+                val dstJsonObject = getJsonObject("dst")
+                val dst = mediaControl.sdpSession.dst
+                assertEquals(dst.addr, dstJsonObject.getString("addr"))
+                assertEquals(dst.rtpPort, dstJsonObject.getInteger("rtp_port"))
+                assertEquals(dst.rtcpPort, dstJsonObject.getInteger("rtcp_port"))
+
+                val codec = mediaControl.sdpSession.codecs.first()
+                getJsonArray("codecs").getJsonObject(0).apply {
+                    assertEquals(codec.name, getString("name"))
+
+                    assertEquals(codec.payloadTypes.size, getJsonArray("payload_types").size())
+                    assertEquals(codec.payloadTypes.first(), getJsonArray("payload_types").getInteger(0))
+
+                    assertEquals(codec.clockRate, getInteger("clock_rate"))
+                    assertEquals(codec.ie, getFloat("ie"))
+                    assertEquals(codec.bpl, getFloat("bpl"))
+                }
+
+                assertEquals(mediaControl.sdpSession.ptime, getInteger("ptime"))
+            }
+
+            assertEquals(mediaControl.recording?.mode, getJsonObject("recording").getInteger("mode").toByte())
         }
     }
 
@@ -73,32 +99,64 @@ class MediaControlTest {
         val jsonObject = JsonObject().apply {
             put("timestamp", System.currentTimeMillis())
 
-            put("codecs", listOf(JsonObject().apply {
-                put("payload_types", listOf(0))
-                put("name", "PCMU")
-                put("clock_rate", 8000)
-                put("ie", 0F)
-                put("bpl", 4.3F)
-            }))
-            put("ptime", 30)
-
             put("call_id", "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com")
+
+            put("sdp_session", JsonObject().apply {
+                put("src", JsonObject().apply {
+                    put("addr", "127.0.0.1")
+                    put("rtp_port", 1000)
+                    put("rtcp_port", 1001)
+                })
+                put("dst", JsonObject().apply {
+                    put("addr", "127.0.0.2")
+                    put("rtp_port", 2000)
+                    put("rtcp_port", 2001)
+                })
+
+                put("codecs", listOf(JsonObject().apply {
+                    put("payload_types", listOf(0))
+                    put("name", "PCMU")
+                    put("clock_rate", 8000)
+                    put("ie", 0F)
+                    put("bpl", 4.3F)
+                }))
+
+                put("ptime", 30)
+            })
+
+            put("recording", JsonObject().apply {
+                put("mode", 1)
+            })
         }
 
         jsonObject.mapTo(MediaControl::class.java).apply {
             assertEquals(jsonObject.getLong("timestamp"), timestamp)
 
-            jsonObject.getJsonArray("codecs").getJsonObject(0).apply {
-                val codec = codecs.first()
+            assertEquals(jsonObject.getString("call_id"), callId)
+
+            val sdpSessionJson = jsonObject.getJsonObject("sdp_session")
+
+            val src = sdpSessionJson.getJsonObject("src")
+            assertEquals(src.getString("addr"), sdpSession.src.addr)
+            assertEquals(src.getInteger("rtp_port"), sdpSession.src.rtpPort)
+            assertEquals(src.getInteger("rtcp_port"), sdpSession.src.rtcpPort)
+
+            val dst = sdpSessionJson.getJsonObject("dst")
+            assertEquals(dst.getString("addr"), sdpSession.dst.addr)
+            assertEquals(dst.getInteger("rtp_port"), sdpSession.dst.rtpPort)
+            assertEquals(dst.getInteger("rtcp_port"), sdpSession.dst.rtcpPort)
+
+            sdpSessionJson.getJsonArray("codecs").getJsonObject(0).apply {
+                val codec = sdpSession.codecs.first()
                 assertEquals(getJsonArray("payload_types").getInteger(0), codec.payloadTypes.first())
                 assertEquals(getString("name"), codec.name)
                 assertEquals(getInteger("clock_rate"), codec.clockRate)
                 assertEquals(getFloat("ie"), codec.ie)
                 assertEquals(getFloat("bpl"), codec.bpl)
             }
-            assertEquals(jsonObject.getInteger("ptime"), ptime)
+            assertEquals(sdpSessionJson.getInteger("ptime"), sdpSession.ptime)
 
-            assertEquals(jsonObject.getString("call_id"), callId)
+            assertEquals(jsonObject.getJsonObject("recording").getInteger("mode"), recording!!.mode.toInt())
         }
     }
 }

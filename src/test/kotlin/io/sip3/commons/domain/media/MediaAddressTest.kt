@@ -16,21 +16,21 @@
 
 package io.sip3.commons.domain.media
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.sip3.commons.util.MediaUtil
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-open class MediaControl {
+class MediaAddressTest {
 
-    var timestamp: Long = 0
+    @Test
+    fun `Validate Ids for rtp and rtcp`() {
+        val mediaAddress = MediaAddress().apply {
+            addr = "127.0.0.1"
+            rtpPort = 1000
+            rtcpPort = 1001
+        }
 
-    @JsonProperty("call_id")
-    lateinit var callId: String
-
-    @JsonProperty("sdp_session")
-    lateinit var sdpSession: SdpSession
-
-    var recording: Recording? = null
+        assertEquals(MediaUtil.sdpSessionId(mediaAddress.addr, mediaAddress.rtpPort), mediaAddress.rtpId)
+        assertEquals(MediaUtil.sdpSessionId(mediaAddress.addr, mediaAddress.rtcpPort), mediaAddress.rtcpId)
+    }
 }
