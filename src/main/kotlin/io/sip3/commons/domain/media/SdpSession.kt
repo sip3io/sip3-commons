@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.domain.media
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-class Codec {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+open class SdpSession {
 
-    var name: String = "UNDEFINED"
+    lateinit var src: MediaAddress
+    lateinit var dst: MediaAddress
 
-    @JsonProperty("payload_types")
-    lateinit var payloadTypes: List<Int>
+    lateinit var codecs: List<Codec>
+    var ptime: Int = 20
 
-    @JsonProperty("clock_rate")
-    var clockRate: Int = 8000
-
-    var ie: Float = 5.0F
-    var bpl: Float = 10.0F
+    fun codec(payloadType: Int): Codec? {
+        return codecs.firstOrNull { it.payloadTypes.contains(payloadType) }
+    }
 }
