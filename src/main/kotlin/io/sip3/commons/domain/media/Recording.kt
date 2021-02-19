@@ -16,9 +16,13 @@
 
 package io.sip3.commons.domain.media
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import kotlin.experimental.and
 
-class Recording {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+open class Recording {
 
     companion object {
 
