@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.domain.media
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import kotlin.experimental.and
 
-class Codec {
+class Recording {
 
-    var name: String = "UNDEFINED"
+    companion object {
 
-    @JsonProperty("payload_types")
-    lateinit var payloadTypes: List<Int>
+        const val RTP = 0x01.toByte()
+        const val RTP_DUMMY = 0x02.toByte()
+        const val RTCP = 0x04.toByte()
+    }
 
-    @JsonProperty("clock_rate")
-    var clockRate: Int = 8000
-
-    var ie: Float = 5.0F
-    var bpl: Float = 10.0F
+    var mode: Byte = RTP and RTCP
 }
+

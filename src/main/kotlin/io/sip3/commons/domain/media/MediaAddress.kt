@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package io.sip3.commons.domain
+package io.sip3.commons.domain.media
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.sip3.commons.util.MediaUtil
 
-class SdpSession {
-
-    var timestamp: Long = 0
+class MediaAddress {
 
     lateinit var address: String
 
@@ -32,12 +30,6 @@ class SdpSession {
     @JsonProperty("rtcp_port")
     var rtcpPort: Int = 0
 
-    lateinit var codecs: List<Codec>
-    var ptime: Int = 20
-
-    @JsonProperty("call_id")
-    lateinit var callId: String
-
     @get:JsonIgnore
     val rtpId by lazy {
         MediaUtil.sdpSessionId(address, rtpPort)
@@ -46,9 +38,5 @@ class SdpSession {
     @get:JsonIgnore
     val rtcpId by lazy {
         MediaUtil.sdpSessionId(address, rtcpPort)
-    }
-
-    fun codec(payloadType: Int): Codec? {
-        return codecs.firstOrNull { it.payloadTypes.contains(payloadType) }
     }
 }
