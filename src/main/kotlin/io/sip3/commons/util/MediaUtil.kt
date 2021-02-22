@@ -22,6 +22,14 @@ object MediaUtil {
         return (srcPort.toLong() shl 48) or (dstPort.toLong() shl 32) or ssrc
     }
 
+    fun sdpSessionId(address: ByteArray, port: Int): Long {
+        try {
+            return (IpUtil.convertToInt(address).toLong() shl 32) or port.toLong()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Couldn't retrieve session ID. Address: $address, Port: $port", e)
+        }
+    }
+
     fun sdpSessionId(address: String, port: Int): Long {
         try {
             return (IpUtil.convertToInt(address).toLong() shl 32) or port.toLong()

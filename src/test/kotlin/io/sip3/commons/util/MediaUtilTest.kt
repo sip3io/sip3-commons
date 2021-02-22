@@ -31,7 +31,9 @@ class MediaUtilTest {
 
     @Test
     fun `Session Id for IPv4`() {
+        assertEquals(9151314447111825168, sdpSessionId(byteArrayOf(0x7F.toByte(), 0x00.toByte(), 0x00.toByte(), 0x01.toByte()), 10000))
         assertEquals(9151314447111825168, sdpSessionId("127.0.0.1", 10000))
+        assertEquals(-4564387184274026976, sdpSessionId(byteArrayOf(0xC0.toByte(), 0xA8.toByte(), 0x0A.toByte(), 0x0A.toByte()), 20000))
         assertEquals(-4564387184274026976, sdpSessionId("192.168.10.10", 20000))
     }
 
