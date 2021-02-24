@@ -19,7 +19,7 @@ package io.sip3.commons.vertx.util
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
 
-fun <T> Message<T>.localReply(message: Any, options: DeliveryOptions? = null) {
+fun <T> Message<T>.localReply(message: Any?, options: DeliveryOptions? = null) {
     options?.apply {
         codecName = "local"
         isLocalOnly = true
