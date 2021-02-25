@@ -28,10 +28,6 @@ class RecordingPayload : Encodable, Decodable {
 
         const val FIXED_PAYLOAD_LENGTH = 14
 
-        const val TYPE_RTP: Byte = 0x00
-        const val TYPE_RTP_GDPR: Byte = 0x01
-        const val TYPE_RTCP: Byte = 0x02
-
         const val TAG_TYPE = 1
         const val TAG_MODE = 2
         const val TAG_CALL_ID = 3

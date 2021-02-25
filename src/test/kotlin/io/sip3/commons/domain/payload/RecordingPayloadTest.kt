@@ -16,6 +16,7 @@
 
 package io.sip3.commons.domain.payload
 
+import io.sip3.commons.PacketTypes
 import io.sip3.commons.domain.media.Recording
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -26,8 +27,8 @@ class RecordingPayloadTest {
     companion object {
 
         val RECORDING = RecordingPayload().apply {
-            type = RecordingPayload.TYPE_RTP_GDPR
-            mode = Recording.RTP_GDPR
+            type = PacketTypes.RTP
+            mode = Recording.GDPR
             callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
             payload = byteArrayOf(
                 0x80.toByte(), 0x08.toByte(), 0x01.toByte(), 0xdd.toByte(), 0x2b.toByte(), 0x76.toByte(), 0x37.toByte(),
