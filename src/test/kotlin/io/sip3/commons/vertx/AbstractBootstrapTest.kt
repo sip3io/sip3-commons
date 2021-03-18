@@ -93,12 +93,13 @@ class AbstractBootstrapTest : VertxTest() {
 
     @Test
     fun `Retrieve InfluxDB counters`() {
+        val port = findRandomPort()
         runTest(
             deploy = {
                 vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
                     put("metrics", JsonObject().apply {
                         put("influxdb", JsonObject().apply {
-                            put("uri", "http://127.0.0.1:8086")
+                            put("uri", "http://127.0.0.1:$port")
                             put("step", 1000)
                         })
                     })
@@ -113,20 +114,21 @@ class AbstractBootstrapTest : VertxTest() {
                     request.response().end("OK")
                     context.completeNow()
                 }
-                server.listen(8086)
+                server.listen(port)
             }
         )
     }
 
     @Test
     fun `Retrieve Datadog counters`() {
+        val port = findRandomPort()
         runTest(
             deploy = {
                 vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
                     put("metrics", JsonObject().apply {
                         put("statsd", JsonObject().apply {
                             put("host", "127.0.0.1")
-                            put("port", 8125)
+                            put("port", port)
                             put("step", 1000)
                         })
                     })
@@ -137,7 +139,7 @@ class AbstractBootstrapTest : VertxTest() {
             },
             assert = {
                 val socket = vertx.createDatagramSocket(DatagramSocketOptions())
-                socket.listen(8125, "0.0.0.0") { connection ->
+                socket.listen(port, "0.0.0.0") { connection ->
                     if (connection.succeeded()) {
                         socket.handler { context.completeNow() }
                     }
@@ -148,12 +150,13 @@ class AbstractBootstrapTest : VertxTest() {
 
     @Test
     fun `Retrieve ELK counters`() {
+        val port = findRandomPort()
         runTest(
             deploy = {
                 vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
                     put("metrics", JsonObject().apply {
                         put("elastic", JsonObject().apply {
-                            put("host", "http://127.0.0.1:9200")
+                            put("host", "http://127.0.0.1:$port")
                             put("step", 1000)
                         })
                     })
@@ -168,7 +171,7 @@ class AbstractBootstrapTest : VertxTest() {
                     request.response().end("OK")
                     context.completeNow()
                 }
-                server.listen(9200)
+                server.listen(port)
             }
         )
     }
