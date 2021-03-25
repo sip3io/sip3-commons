@@ -17,4 +17,4 @@
 package io.sip3.commons.vertx.annotations
 
 @Target(AnnotationTarget.CLASS)
-annotation class Instance(val singleton: Boolean = false, val order: Int = 1)
+annotation class Instance(val singleton: Boolean = false, val worker: Boolean = false, val order: Int = 1)

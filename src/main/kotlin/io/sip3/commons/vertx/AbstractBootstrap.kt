@@ -223,15 +223,14 @@ open class AbstractBootstrap : AbstractVerticle() {
             return@sortedBy instanceAnnotation.order
         }.forEach { clazz ->
             val instanceAnnotation = clazz.getDeclaredAnnotation(Instance::class.java)
+
             val instances = when (instanceAnnotation.singleton) {
                 true -> 1
                 else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
             }
+            val worker = instanceAnnotation.worker
 
-            val deploymentOptions = deploymentOptionsOf(
-                config = config,
-                instances = instances
-            )
+            val deploymentOptions = deploymentOptionsOf(config = config, instances = instances, worker = worker)
             try {
                 vertx.deployVerticle(clazz, deploymentOptions).await()
             } catch (e: Exception) {
