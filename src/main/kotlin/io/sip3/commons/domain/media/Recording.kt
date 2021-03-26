@@ -25,8 +25,8 @@ open class Recording {
 
     companion object {
 
-        const val FULL = 0x01.toByte()
-        const val GDPR = 0x02.toByte()
+        const val FULL = 0x00.toByte()
+        const val GDPR = 0x01.toByte()
     }
 
     var mode: Byte = FULL
