@@ -28,9 +28,13 @@ open class MediaControl {
 
     @JsonProperty("call_id")
     lateinit var callId: String
+    lateinit var caller: String
+    lateinit var callee: String
 
     @JsonProperty("sdp_session")
     lateinit var sdpSession: SdpSession
 
     var recording: Recording? = null
+
+    var attributes = mutableMapOf<String, Any>()
 }

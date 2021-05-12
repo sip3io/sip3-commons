@@ -28,6 +28,8 @@ class MediaControlTest {
             timestamp = System.currentTimeMillis()
 
             callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
+            caller = "alice"
+            callee = "bob"
 
             sdpSession = SdpSession().apply {
                 src = MediaAddress().apply {
@@ -54,13 +56,17 @@ class MediaControlTest {
             }
 
             recording = Recording()
+
+            attributes.put("os", "android")
         }
 
         JsonObject.mapFrom(mediaControl).apply {
-            assertEquals(4, size())
+            assertEquals(7, size())
             assertEquals(mediaControl.timestamp, getLong("timestamp"))
 
             assertEquals(mediaControl.callId, getString("call_id"))
+            assertEquals(mediaControl.caller, getString("caller"))
+            assertEquals(mediaControl.callee, getString("callee"))
 
             getJsonObject("sdp_session").apply {
                 val srcJsonObject = getJsonObject("src")
@@ -100,6 +106,8 @@ class MediaControlTest {
             put("timestamp", System.currentTimeMillis())
 
             put("call_id", "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com")
+            put("caller", "alice")
+            put("callee", "bob")
 
             put("sdp_session", JsonObject().apply {
                 put("src", JsonObject().apply {
@@ -127,12 +135,18 @@ class MediaControlTest {
             put("recording", JsonObject().apply {
                 put("mode", 1)
             })
+
+            put("attributes", JsonObject().apply {
+                put("os", "android")
+            })
         }
 
         jsonObject.mapTo(MediaControl::class.java).apply {
             assertEquals(jsonObject.getLong("timestamp"), timestamp)
 
             assertEquals(jsonObject.getString("call_id"), callId)
+            assertEquals(jsonObject.getString("caller"), caller)
+            assertEquals(jsonObject.getString("callee"), callee)
 
             val sdpSessionJson = jsonObject.getJsonObject("sdp_session")
 
@@ -157,6 +171,9 @@ class MediaControlTest {
             assertEquals(sdpSessionJson.getInteger("ptime"), sdpSession.ptime)
 
             assertEquals(jsonObject.getJsonObject("recording").getInteger("mode"), recording!!.mode.toInt())
+
+            assertEquals(jsonObject.getJsonObject("attributes").size(), 1)
+            assertEquals(jsonObject.getJsonObject("attributes").getString("os"), attributes["os"])
         }
     }
 }
