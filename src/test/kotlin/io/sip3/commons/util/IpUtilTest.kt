@@ -17,49 +17,67 @@
 package io.sip3.commons.util
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import java.net.InetAddress
 
 class IpUtilTest {
 
     @Test
-    fun `Convert valid IPv4 address to Int`() {
-        val addr = InetAddress.getByName("23.8.20.15")
-        assertEquals(386405391, IpUtil.convertToInt(addr.address))
+    fun `Convert valid IPv4 address to String`() {
+        val addr = byteArrayOf(
+            0x17.toByte(), 0x08.toByte(), 0x14.toByte(), 0x0f.toByte()
+        )
+        assertEquals("23.8.20.15", IpUtil.convertToString(addr))
     }
 
     @Test
-    fun `Convert invalid address to Int`() {
-        assertThrows(UnsupportedOperationException::class.java) {
-            val addr = byteArrayOf(0x01, 0x02, 0x03)
-            IpUtil.convertToInt(addr)
-        }
-    }
+    fun `Convert valid IPv6 address to String`() {
+        val addr1 = byteArrayOf(
+            0xfe.toByte(), 0x80.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x4e.toByte(), 0x96.toByte(), 0x14.toByte(), 0x01.toByte(), 0xf4.toByte(), 0xa7.toByte(),
+            0x7f.toByte(), 0xc0.toByte()
+        )
+        assertEquals("fe80::4e96:1401:f4a7:7fc0", IpUtil.convertToString(addr1))
 
-    @Test
-    fun `Convert valid string address to Int`() {
-        assertEquals(386405391, IpUtil.convertToInt("23.8.20.15"))
-    }
+        val addr2 = byteArrayOf(
+            0x96.toByte(), 0x14.toByte(), 0x01.toByte(), 0xf4.toByte(), 0xa7.toByte(), 0x7f.toByte(), 0xc0.toByte(),
+            0xfe.toByte(), 0x80.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x4e.toByte()
+        )
+        assertEquals("9614:1f4:a77f:c0fe:8000::4e", IpUtil.convertToString(addr2))
 
-    @Test
-    fun `Convert invalid string address to Int`() {
-        assertThrows(UnsupportedOperationException::class.java) {
-            IpUtil.convertToInt("23.8.20")
-        }
-    }
+        val addr3 = byteArrayOf(
+            0x96.toByte(), 0x14.toByte(), 0x00.toByte(), 0x00.toByte(), 0xc0.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x80.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x4e.toByte()
+        )
+        assertEquals("9614:0:c000:0:8000::4e", IpUtil.convertToString(addr3))
 
-    @Test
-    fun `Convert valid IPV4 address to String`() {
-        val addr = InetAddress.getByName("23.8.20.15")
-        assertEquals("23.8.20.15", IpUtil.convertToString(addr.address))
-    }
+        val addr4 = byteArrayOf(
+            0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x01.toByte(),
+            0x00.toByte(), 0x00.toByte()
+        )
+        assertEquals("0:1::1:0:1:0", IpUtil.convertToString(addr4))
 
-    @Test
-    fun `Convert invalid address to String`() {
-        assertThrows(UnsupportedOperationException::class.java) {
-            val addr = byteArrayOf(0x01, 0x02, 0x03)
-            IpUtil.convertToString(addr)
-        }
+        val addr5 = byteArrayOf(
+            0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x01.toByte()
+        )
+        assertEquals("::1", IpUtil.convertToString(addr5))
+
+        val addr6 = byteArrayOf(
+            0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x00.toByte()
+        )
+        assertEquals("1::", IpUtil.convertToString(addr6))
+
+        val addr7 = byteArrayOf(
+            0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x01.toByte(), 0x00.toByte(),
+            0x01.toByte(), 0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x01.toByte(), 0x00.toByte(), 0x01.toByte(),
+            0x00.toByte(), 0x01.toByte()
+        )
+        assertEquals("1:1:1:1:1:1:1:1", IpUtil.convertToString(addr7))
     }
 }

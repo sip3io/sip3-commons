@@ -16,41 +16,116 @@
 
 package io.sip3.commons.util
 
+import kotlin.experimental.or
+
 object IpUtil {
 
-    fun convertToInt(addr: ByteArray): Int {
-        if (addr.size != 4) {
-            throw UnsupportedOperationException("Can't convert ${addr.size}bytes address to Int")
+    fun convertToString(addr: ByteArray): String {
+        return when (addr.size) {
+            4 -> {
+                convertIpv4ToString(addr)
+            }
+            16 -> {
+                convertIpv6ToString(addr)
+            }
+            else -> throw UnsupportedOperationException("Unknown IP address format: $addr")
         }
-
-        var number = 0
-        repeat(4) { i ->
-            val octet = addr[i].toInt() and 0xff
-            number = (number shl 8) or octet
-        }
-        return number
-    }
-
-    fun convertToInt(addr: String): Int {
-        val octets = addr.split(".")
-        if (octets.size != 4) {
-            throw UnsupportedOperationException("Can't convert '$addr' to Int")
-        }
-
-        var number = 0
-        repeat(4) { i ->
-            number = (number shl 8) + octets[i].toInt()
-        }
-
-        return number
     }
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    fun convertToString(addr: ByteArray): String {
-        if (addr.size != 4) {
-            throw UnsupportedOperationException("Can't convert ${addr.size}bytes address to String")
+    private fun convertIpv4ToString(addr: ByteArray): String {
+        val sb = StringBuilder()
+
+        (0 until 4).forEach { i ->
+            val v = addr[i].toUByte()
+            sb.append(v)
+
+            if (i < 3) {
+                sb.append(".")
+            }
         }
 
-        return "${addr[0].toUByte()}.${addr[1].toUByte()}.${addr[2].toUByte()}.${addr[3].toUByte()}"
+        return sb.toString()
+    }
+
+    private fun convertIpv6ToString(addr: ByteArray): String {
+        val sb = StringBuilder()
+
+        val (j, l) = findTheLongestZeroSequence(addr)
+
+        (0 until 8).forEach { i ->
+            when {
+                i == j -> {
+                    sb.append("::")
+                }
+                i < j || i >= j + l -> {
+                    val v1 = addr[i * 2]
+                    val v2 = addr[i * 2 + 1]
+
+                    if (v1 == 0.toByte()) {
+                        sb.append("%x".format(v2))
+                    } else {
+                        sb.append("%x".format(v1))
+                        sb.append("%02x".format(v2))
+                    }
+
+                    if (i != j - 1 && i < 7) {
+                        sb.append(":")
+                    }
+                }
+            }
+        }
+
+        return sb.toString()
+    }
+
+    private fun findTheLongestZeroSequence(addr: ByteArray): Pair<Int, Int> {
+        // First zero sequence
+        var j1 = -1
+        var l1 = 0
+
+        // Second zero sequence
+        var j2 = -1
+        var l2 = 0
+
+        var isZeroSequence = false
+
+        (0 until 8).forEach { i ->
+            when (addr[i * 2] or addr[i * 2 + 1]) {
+                0.toByte() -> {
+                    if (!isZeroSequence) {
+                        // New zero sequence
+                        when {
+                            j2 != -1 -> {
+                                if (l1 < l2) {
+                                    j1 = j2
+                                    l1 = l2
+                                }
+                                j2 = i
+                                l2 = 1
+                            }
+                            j1 != -1 -> {
+                                j2 = i
+                                l2++
+                            }
+                            else -> {
+                                j1 = i
+                                l1++
+                            }
+                        }
+
+                        isZeroSequence = true
+                    } else {
+                        // Existing zero sequence
+                        if (j2 != -1) l2++ else l1++
+                    }
+                }
+                else -> {
+                    isZeroSequence = false
+                }
+            }
+        }
+
+        return if (l1 < l2) Pair(j2, l2) else Pair(j1, l1)
     }
 }
