@@ -19,7 +19,6 @@ package io.sip3.commons.util
 import io.sip3.commons.util.MediaUtil.rtpSessionId
 import io.sip3.commons.util.MediaUtil.sdpSessionId
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class MediaUtilTest {
@@ -30,15 +29,14 @@ class MediaUtilTest {
     }
 
     @Test
-    fun `Session Id for IPv4`() {
-        assertEquals(9151314447111825168, sdpSessionId(byteArrayOf(0x7F.toByte(), 0x00.toByte(), 0x00.toByte(), 0x01.toByte()), 10000))
-        assertEquals(9151314447111825168, sdpSessionId("127.0.0.1", 10000))
-        assertEquals(-4564387184274026976, sdpSessionId(byteArrayOf(0xC0.toByte(), 0xA8.toByte(), 0x0A.toByte(), 0x0A.toByte()), 20000))
-        assertEquals(-4564387184274026976, sdpSessionId("192.168.10.10", 20000))
-    }
-
-    @Test
-    fun `Session Id for IPv6`() {
-        assertThrows(IllegalArgumentException::class.java) { sdpSessionId("fe80::42:acff:fe12:5", 10000) }
+    fun `Session Id for IPv4 and IPv6`() {
+        assertEquals("127.0.0.1:10000", sdpSessionId(byteArrayOf(0x7F.toByte(), 0x00.toByte(), 0x00.toByte(), 0x01.toByte()), 10000))
+        assertEquals("127.0.0.1:10000", sdpSessionId("127.0.0.1", 10000))
+        assertEquals("fe80::4e96:1401:f4a7:7fc0:20000", sdpSessionId(byteArrayOf(
+            0xfe.toByte(), 0x80.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+            0x00.toByte(), 0x4e.toByte(), 0x96.toByte(), 0x14.toByte(), 0x01.toByte(), 0xf4.toByte(), 0xa7.toByte(),
+            0x7f.toByte(), 0xc0.toByte()
+        ), 20000))
+        assertEquals("fe80::4e96:1401:f4a7:7fc0:20000", sdpSessionId("fe80::4e96:1401:f4a7:7fc0", 20000))
     }
 }
