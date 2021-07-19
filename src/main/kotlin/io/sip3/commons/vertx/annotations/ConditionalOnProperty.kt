@@ -17,4 +17,4 @@
 package io.sip3.commons.vertx.annotations
 
 @Target(AnnotationTarget.CLASS)
-annotation class ConditionalOnProperty(val value: String)
+annotation class ConditionalOnProperty(val pointer: String, val matcher: String = ".*")
