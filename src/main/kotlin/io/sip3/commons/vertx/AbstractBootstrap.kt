@@ -51,6 +51,7 @@ import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
 import java.time.Duration
+import kotlin.coroutines.CoroutineContext
 import kotlin.system.exitProcess
 
 open class AbstractBootstrap : AbstractVerticle() {
@@ -76,7 +77,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                 val config = asr.result().mergeIn(config())
                 logger.info("Configuration:\n ${config.encodePrettily()}")
                 deployMeterRegistries(config)
-                GlobalScope.launch(vertx.dispatcher()) {
+                GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
                     deployVerticles(config)
                 }
             }

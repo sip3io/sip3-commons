@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.extension.ExtendWith
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 
 @ExtendWith(VertxExtension::class)
@@ -46,7 +47,7 @@ open class VertxTest {
         context = VertxTestContext()
         vertx = Vertx.vertx()
         vertx.registerLocalCodec()
-        GlobalScope.launch(vertx.dispatcher()) {
+        GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
             assert?.invoke()
             deploy?.invoke()
             execute?.invoke()
