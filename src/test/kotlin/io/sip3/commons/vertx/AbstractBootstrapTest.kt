@@ -63,6 +63,24 @@ class AbstractBootstrapTest : VertxTest() {
         }
     }
 
+    @Instance
+    @ConditionalOnProperty(pointer = "/E", matcher = "true")
+    open class E : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("E") {}
+        }
+    }
+
+    @Instance
+    @ConditionalOnProperty(pointer = "/F", matcher = "false")
+    open class F : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localConsumer<Any>("F") {}
+        }
+    }
+
     @Test
     fun `Check auto deployment`() {
         runTest(
@@ -71,6 +89,8 @@ class AbstractBootstrapTest : VertxTest() {
                     put("D", JsonObject().apply {
                         put("D", true)
                     })
+                    put("E", true)
+                    put("F", true)
                 })
             },
             execute = {
@@ -79,10 +99,11 @@ class AbstractBootstrapTest : VertxTest() {
             assert = {
                 vertx.setPeriodic(100) {
                     val endpoints = vertx.eventBus().endpoints()
-                    if (endpoints.size == 2) {
+                    if (endpoints.size >= 3) {
                         context.verify {
                             assertTrue(endpoints.contains("B"))
                             assertTrue(endpoints.contains("D"))
+                            assertTrue(endpoints.contains("E"))
                         }
                         context.completeNow()
                     }

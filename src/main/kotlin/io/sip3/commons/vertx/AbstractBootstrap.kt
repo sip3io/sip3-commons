@@ -212,8 +212,8 @@ open class AbstractBootstrap : AbstractVerticle() {
                 .filter { clazz ->
                     // Filter by `ConditionalOnProperty` annotation
                     clazz.getDeclaredAnnotation(ConditionalOnProperty::class.java)?.let { conditionalOnPropertyAnnotation ->
-                        val pointer = JsonPointer.from(conditionalOnPropertyAnnotation.value)
-                        return@filter pointer.queryJson(config) != null
+                        val value = JsonPointer.from(conditionalOnPropertyAnnotation.pointer).queryJson(config)?.toString()
+                        return@filter value != null && Regex(conditionalOnPropertyAnnotation.matcher).matches(value)
                     } ?: true
                 }
                 .filterIsInstance<Class<out Verticle>>()
