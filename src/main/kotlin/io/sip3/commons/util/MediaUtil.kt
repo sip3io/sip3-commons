@@ -18,7 +18,7 @@ package io.sip3.commons.util
 
 object MediaUtil {
 
-    fun rtpSessionId(srcPort: Int, dstPort: Int, ssrc: Long): Long {
+    fun rtpStreamId(srcPort: Int, dstPort: Int, ssrc: Long): Long {
         return (srcPort.toLong() shl 48) or (dstPort.toLong() shl 32) or ssrc
     }
 

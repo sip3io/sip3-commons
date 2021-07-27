@@ -16,7 +16,7 @@
 
 package io.sip3.commons.util
 
-import io.sip3.commons.util.MediaUtil.rtpSessionId
+import io.sip3.commons.util.MediaUtil.rtpStreamId
 import io.sip3.commons.util.MediaUtil.sdpSessionId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test
 class MediaUtilTest {
 
     @Test
-    fun `RTP Session Id`() {
-        assertEquals(2814835666452481000, rtpSessionId(10000, 20000, 1000L))
+    fun `RTP Stream Id`() {
+        assertEquals(2814835666452481000, rtpStreamId(10000, 20000, 1000L))
     }
 
     @Test
