@@ -29,6 +29,12 @@ open class MediaControl {
     @JsonProperty("call_id")
     lateinit var callId: String
 
+    @JsonProperty("caller")
+    lateinit var caller: String
+
+    @JsonProperty("callee")
+    lateinit var callee: String
+
     @JsonProperty("sdp_session")
     lateinit var sdpSession: SdpSession
 

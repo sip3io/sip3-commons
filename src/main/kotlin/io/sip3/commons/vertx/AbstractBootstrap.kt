@@ -161,7 +161,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun flavor(): StatsdFlavor {
                         val flavour = statsd.getString("flavour") ?: return StatsdFlavor.DATADOG
                         return try {
-                            StatsdFlavor.valueOf(flavour.toUpperCase())
+                            StatsdFlavor.valueOf(flavour.uppercase())
                         } catch (e: Exception) {
                             StatsdFlavor.DATADOG
                         }
