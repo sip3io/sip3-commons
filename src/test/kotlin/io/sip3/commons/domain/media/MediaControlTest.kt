@@ -29,6 +29,9 @@ class MediaControlTest {
 
             callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
 
+            caller = "1000"
+            callee = "2000"
+
             sdpSession = SdpSession().apply {
                 src = MediaAddress().apply {
                     addr = "127.0.0.1"
@@ -57,10 +60,13 @@ class MediaControlTest {
         }
 
         JsonObject.mapFrom(mediaControl).apply {
-            assertEquals(4, size())
+            assertEquals(6, size())
             assertEquals(mediaControl.timestamp, getLong("timestamp"))
 
             assertEquals(mediaControl.callId, getString("call_id"))
+
+            assertEquals(mediaControl.caller, getString("caller"))
+            assertEquals(mediaControl.callee, getString("callee"))
 
             getJsonObject("sdp_session").apply {
                 val srcJsonObject = getJsonObject("src")
@@ -100,6 +106,8 @@ class MediaControlTest {
             put("timestamp", System.currentTimeMillis())
 
             put("call_id", "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com")
+            put("callee", "1000")
+            put("caller", "2000")
 
             put("sdp_session", JsonObject().apply {
                 put("src", JsonObject().apply {
@@ -133,6 +141,8 @@ class MediaControlTest {
             assertEquals(jsonObject.getLong("timestamp"), timestamp)
 
             assertEquals(jsonObject.getString("call_id"), callId)
+            assertEquals(jsonObject.getString("caller"), caller)
+            assertEquals(jsonObject.getString("callee"), callee)
 
             val sdpSessionJson = jsonObject.getJsonObject("sdp_session")
 

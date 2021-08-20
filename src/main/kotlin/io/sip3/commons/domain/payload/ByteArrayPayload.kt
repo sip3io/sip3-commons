@@ -19,7 +19,8 @@ package io.sip3.commons.domain.payload
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 
-inline class ByteArrayPayload(val bytes: ByteArray) : Encodable {
+@JvmInline
+value class ByteArrayPayload(val bytes: ByteArray) : Encodable {
 
     override fun encode(): ByteBuf {
         return Unpooled.wrappedBuffer(bytes)
