@@ -56,8 +56,8 @@ class RtpReportPayloadTest {
                 mos = 13F
                 fractionLost = 14F
 
-                createdAt = 1579511172674
-                startedAt = 1579522272674
+                reportedAt = 1579511172674
+                createdAt = 1579522272674
             }
         }
     }
@@ -95,8 +95,8 @@ class RtpReportPayloadTest {
             assertEquals(mos, decoded.mos)
             assertEquals(fractionLost, decoded.fractionLost)
 
+            assertEquals(reportedAt, decoded.reportedAt)
             assertEquals(createdAt, decoded.createdAt)
-            assertEquals(startedAt, decoded.startedAt)
         }
     }
 
@@ -131,8 +131,8 @@ class RtpReportPayloadTest {
             assertEquals(mos, decoded.mos)
             assertEquals(fractionLost, decoded.fractionLost)
 
+            assertEquals(reportedAt, decoded.reportedAt)
             assertEquals(createdAt, decoded.createdAt)
-            assertEquals(startedAt, decoded.startedAt)
         }
     }
 
@@ -222,13 +222,13 @@ class RtpReportPayloadTest {
             assertEquals(7, byteBuf.readShort())
             assertEquals(fractionLost, byteBuf.readFloat())
 
+            assertEquals(RtpReportPayload.TAG_REPORTED_AT, byteBuf.readByte().toInt())
+            assertEquals(11, byteBuf.readShort())
+            assertEquals(reportedAt, byteBuf.readLong())
+
             assertEquals(RtpReportPayload.TAG_CREATED_AT, byteBuf.readByte().toInt())
             assertEquals(11, byteBuf.readShort())
             assertEquals(createdAt, byteBuf.readLong())
-
-            assertEquals(RtpReportPayload.TAG_STARTED_AT, byteBuf.readByte().toInt())
-            assertEquals(11, byteBuf.readShort())
-            assertEquals(startedAt, byteBuf.readLong())
         }
         assertEquals(0, byteBuf.remainingCapacity())
     }

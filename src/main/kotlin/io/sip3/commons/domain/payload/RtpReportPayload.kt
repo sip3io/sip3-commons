@@ -54,8 +54,8 @@ class RtpReportPayload : Encodable, Decodable {
         const val TAG_MOS = 21
         const val TAG_FRACTION_LOST = 22
 
-        const val TAG_CREATED_AT = 23
-        const val TAG_STARTED_AT = 24
+        const val TAG_REPORTED_AT = 23
+        const val TAG_CREATED_AT = 24
     }
 
     var source: Byte = -1
@@ -82,8 +82,8 @@ class RtpReportPayload : Encodable, Decodable {
     var mos: Float = 1.0F
     var fractionLost: Float = 0F
 
+    var reportedAt: Long = 0
     var createdAt: Long = 0
-    var startedAt: Long = 0
 
     override fun encode(): ByteBuf {
         var bufferSize = BASE_PAYLOAD_LENGTH
@@ -115,8 +115,8 @@ class RtpReportPayload : Encodable, Decodable {
             writeTlv(TAG_MOS, mos)
             writeTlv(TAG_FRACTION_LOST, fractionLost)
 
+            writeTlv(TAG_REPORTED_AT, reportedAt)
             writeTlv(TAG_CREATED_AT, createdAt)
-            writeTlv(TAG_STARTED_AT, startedAt)
         }
     }
 
@@ -146,8 +146,8 @@ class RtpReportPayload : Encodable, Decodable {
                 TAG_R_FACTOR -> rFactor = buffer.readFloat()
                 TAG_MOS -> mos = buffer.readFloat()
                 TAG_FRACTION_LOST -> fractionLost = buffer.readFloat()
+                TAG_REPORTED_AT -> reportedAt = buffer.readLong()
                 TAG_CREATED_AT -> createdAt = buffer.readLong()
-                TAG_STARTED_AT -> startedAt = buffer.readLong()
             }
         }
     }
