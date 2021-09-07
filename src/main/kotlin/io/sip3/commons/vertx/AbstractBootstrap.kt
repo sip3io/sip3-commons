@@ -30,6 +30,7 @@ import io.micrometer.statsd.StatsdMeterRegistry
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
+import io.sip3.commons.vertx.util.closeAndExitProcess
 import io.sip3.commons.vertx.util.localPublish
 import io.sip3.commons.vertx.util.registerLocalCodec
 import io.vertx.config.ConfigRetriever
@@ -52,7 +53,6 @@ import org.reflections.ReflectionUtils
 import org.reflections.Reflections
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
-import kotlin.system.exitProcess
 
 open class AbstractBootstrap : AbstractVerticle() {
 
@@ -65,14 +65,22 @@ open class AbstractBootstrap : AbstractVerticle() {
         // Define `local` codec to avoid serialization costs within the application.
         vertx.registerLocalCodec()
         vertx.exceptionHandler { t ->
-            logger.error(t) { "Got unhandled exception." }
+            when (t) {
+                is OutOfMemoryError -> {
+                    logger.error { "Shutting down the process due to OOM." }
+                    vertx.closeAndExitProcess()
+                }
+                else -> {
+                    logger.error(t) { "Got unhandled exception." }
+                }
+            }
         }
 
         val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions())
         configRetriever.getConfig { asr ->
             if (asr.failed()) {
                 logger.error("ConfigRetriever 'getConfig()' failed.", asr.cause())
-                exitProcess(-1)
+                vertx.closeAndExitProcess()
             } else {
                 val config = asr.result().mergeIn(config())
                 logger.info("Configuration:\n ${config.encodePrettily()}")
@@ -236,7 +244,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                 vertx.deployVerticle(clazz, deploymentOptions).await()
             } catch (e: Exception) {
                 logger.error(e) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
-                exitProcess(-1)
+                vertx.closeAndExitProcess()
             }
         }
     }

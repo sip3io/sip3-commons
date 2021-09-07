@@ -19,6 +19,7 @@ package io.sip3.commons.vertx.util
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.MessageCodec
+import kotlin.system.exitProcess
 
 fun Vertx.registerLocalCodec() {
     eventBus().unregisterCodec("local")
@@ -49,4 +50,8 @@ fun Vertx.setPeriodic(initialDelay: Long, period: Long, handler: () -> Unit) {
             }
         }
     }
+}
+
+fun Vertx.closeAndExitProcess(code: Int = -1) {
+    close { exitProcess(code) }
 }
