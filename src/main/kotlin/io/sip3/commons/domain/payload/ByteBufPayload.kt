@@ -18,8 +18,7 @@ package io.sip3.commons.domain.payload
 
 import io.netty.buffer.ByteBuf
 
-@JvmInline
-value class ByteBufPayload(val buffer: ByteBuf) : Encodable {
+class ByteBufPayload(val buffer: ByteBuf) : Encodable {
 
     override fun encode(): ByteBuf {
         return buffer
