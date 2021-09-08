@@ -16,7 +16,6 @@
 
 package io.sip3.commons.domain.payload
 
-import io.sip3.commons.util.remainingCapacity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -70,7 +69,7 @@ class RtpReportPayloadTest {
         assertEquals(expectedLength, byteBuf.capacity())
 
         val decoded = RtpReportPayload().apply { decode(byteBuf) }
-        assertEquals(0, byteBuf.remainingCapacity())
+        assertEquals(0, byteBuf.readableBytes())
 
         rtpReportPayload.apply {
             assertEquals(source, decoded.source)
@@ -107,7 +106,7 @@ class RtpReportPayloadTest {
         assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH, byteBuf.capacity())
 
         val decoded = RtpReportPayload().apply { decode(byteBuf) }
-        assertEquals(0, byteBuf.remainingCapacity())
+        assertEquals(0, byteBuf.readableBytes())
 
         rtpReportPayload.apply {
             assertEquals(source, decoded.source)
@@ -230,6 +229,6 @@ class RtpReportPayloadTest {
             assertEquals(11, byteBuf.readShort())
             assertEquals(createdAt, byteBuf.readLong())
         }
-        assertEquals(0, byteBuf.remainingCapacity())
+        assertEquals(0, byteBuf.readableBytes())
     }
 }

@@ -18,7 +18,6 @@ package io.sip3.commons.domain.payload
 
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import io.sip3.commons.util.remainingCapacity
 import io.sip3.commons.util.writeTlv
 import java.nio.charset.Charset
 
@@ -121,7 +120,7 @@ class RtpReportPayload : Encodable, Decodable {
     }
 
     override fun decode(buffer: ByteBuf) {
-        while (buffer.remainingCapacity() > 0) {
+        while (buffer.readableBytes() > 0) {
             // Type
             val type = buffer.readByte()
             // Length

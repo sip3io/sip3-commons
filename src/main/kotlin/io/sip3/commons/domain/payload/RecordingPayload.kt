@@ -18,7 +18,6 @@ package io.sip3.commons.domain.payload
 
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import io.sip3.commons.util.remainingCapacity
 import io.sip3.commons.util.writeTlv
 import java.nio.charset.Charset
 
@@ -52,7 +51,7 @@ class RecordingPayload : Encodable, Decodable {
     }
 
     override fun decode(buffer: ByteBuf) {
-        while (buffer.remainingCapacity() > 0) {
+        while (buffer.readableBytes() > 0) {
             // Tag
             val tag = buffer.readByte()
             // Length
