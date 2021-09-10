@@ -166,6 +166,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = Duration.ofMillis(statsd.getLong("step")) ?: super.step()
                     override fun pollingFrequency() = Duration.ofMillis(statsd.getLong("step")) ?: super.pollingFrequency()
                     override fun buffered() = statsd.getBoolean("buffered") ?: super.buffered()
+                    override fun maxPacketLength() = statsd.getInteger("max-packet-length") ?: super.maxPacketLength()
                     override fun flavor(): StatsdFlavor {
                         val flavour = statsd.getString("flavour") ?: return StatsdFlavor.DATADOG
                         return try {
