@@ -21,7 +21,7 @@ import io.netty.buffer.Unpooled
 import io.sip3.commons.util.writeTlv
 import java.nio.charset.Charset
 
-class RtpReportPayload : Encodable, Decodable {
+open class RtpReportPayload : Encodable, Decodable {
 
     companion object {
 
