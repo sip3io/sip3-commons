@@ -43,6 +43,7 @@ class RtpReportPayloadTest {
                 receivedPacketCount = 4
                 lostPacketCount = 5
                 rejectedPacketCount = 6
+                markerPacketCount = 42
 
                 duration = 7
 
@@ -82,6 +83,7 @@ class RtpReportPayloadTest {
             assertEquals(receivedPacketCount, decoded.receivedPacketCount)
             assertEquals(lostPacketCount, decoded.lostPacketCount)
             assertEquals(rejectedPacketCount, decoded.rejectedPacketCount)
+            assertEquals(markerPacketCount, decoded.markerPacketCount)
 
             assertEquals(duration, decoded.duration)
 
@@ -118,6 +120,7 @@ class RtpReportPayloadTest {
             assertEquals(receivedPacketCount, decoded.receivedPacketCount)
             assertEquals(lostPacketCount, decoded.lostPacketCount)
             assertEquals(rejectedPacketCount, decoded.rejectedPacketCount)
+            assertEquals(markerPacketCount, decoded.markerPacketCount)
 
             assertEquals(duration, decoded.duration)
 
@@ -228,6 +231,10 @@ class RtpReportPayloadTest {
             assertEquals(RtpReportPayload.TAG_CREATED_AT, byteBuf.readByte().toInt())
             assertEquals(11, byteBuf.readShort())
             assertEquals(createdAt, byteBuf.readLong())
+
+            assertEquals(RtpReportPayload.TAG_MARKER_PACKET_COUNT, byteBuf.readByte().toInt())
+            assertEquals(7, byteBuf.readShort())
+            assertEquals(markerPacketCount, byteBuf.readInt())
         }
         assertEquals(0, byteBuf.readableBytes())
     }
