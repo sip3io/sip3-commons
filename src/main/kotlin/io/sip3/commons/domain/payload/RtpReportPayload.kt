@@ -21,11 +21,11 @@ import io.netty.buffer.Unpooled
 import io.sip3.commons.util.writeTlv
 import java.nio.charset.Charset
 
-class RtpReportPayload : Encodable, Decodable {
+open class RtpReportPayload : Encodable, Decodable {
 
     companion object {
 
-        const val BASE_PAYLOAD_LENGTH = 129
+        const val BASE_PAYLOAD_LENGTH = 138
 
         const val SOURCE_RTP = 0.toByte()
         const val SOURCE_RTCP = 1.toByte()
@@ -55,6 +55,8 @@ class RtpReportPayload : Encodable, Decodable {
 
         const val TAG_REPORTED_AT = 23
         const val TAG_CREATED_AT = 24
+
+        const val TAG_MARKER_PACKET_COUNT = 25
     }
 
     var source: Byte = -1
@@ -69,6 +71,7 @@ class RtpReportPayload : Encodable, Decodable {
     var receivedPacketCount: Int = 0
     var lostPacketCount: Int = 0
     var rejectedPacketCount: Int = 0
+    var markerPacketCount: Int = 0
 
     var duration: Int = 0
 
@@ -116,6 +119,8 @@ class RtpReportPayload : Encodable, Decodable {
 
             writeTlv(TAG_REPORTED_AT, reportedAt)
             writeTlv(TAG_CREATED_AT, createdAt)
+
+            writeTlv(TAG_MARKER_PACKET_COUNT, markerPacketCount)
         }
     }
 
@@ -147,6 +152,7 @@ class RtpReportPayload : Encodable, Decodable {
                 TAG_FRACTION_LOST -> fractionLost = buffer.readFloat()
                 TAG_REPORTED_AT -> reportedAt = buffer.readLong()
                 TAG_CREATED_AT -> createdAt = buffer.readLong()
+                TAG_MARKER_PACKET_COUNT -> markerPacketCount = buffer.readInt()
             }
         }
     }
