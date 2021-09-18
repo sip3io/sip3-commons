@@ -49,7 +49,7 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         return v
     }
 
-    fun getOrPut(key: K, defaultValue: () -> V): V? {
+    fun getOrPut(key: K, defaultValue: () -> V): V {
         return objects.getOrPut(key) {
             defaultValue.invoke().also { expiringSlots[expiringSlotIdx][key] = it }
         }
