@@ -89,6 +89,12 @@
             <artifactId>vertx-web</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Test -->
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
