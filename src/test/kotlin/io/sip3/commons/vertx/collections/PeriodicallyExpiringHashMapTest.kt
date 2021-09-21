@@ -21,6 +21,8 @@ import io.mockk.junit5.MockKExtension
 import io.sip3.commons.vertx.test.VertxTest
 import io.vertx.core.Vertx
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -41,30 +43,37 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
 
         var now = System.currentTimeMillis()
         every { value.expireAt() }.returns(now - 100)
+        assertTrue(expiringHashMap.isEmpty())
         expiringHashMap.getOrPut("test") { value }
+        assertFalse(expiringHashMap.isEmpty())
         verify(timeout = 1000, exactly = 1) { value.expireAt() }
         verify(timeout = 1000, exactly = 1) { value.onExpire() }
         confirmVerified(value)
+        assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
         every { value.expireAt() }.returns(now + 200)
         expiringHashMap.getOrPut("test") { value }
-        verify(timeout = 1000, exactly = 2) { value.expireAt() }
-        verify(timeout = 1000, exactly = 1) { value.onExpire() }
+        assertFalse(expiringHashMap.isEmpty())
+        verify(timeout = 1000, exactly = 3) { value.expireAt() }
+        verify(timeout = 1000, exactly = 2) { value.onExpire() }
         confirmVerified(value)
+        assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
         every { value.expireAt() }.returns(now + 600)
         expiringHashMap.getOrPut("test") { value }
-        verify(timeout = 1000, exactly = 3) { value.expireAt() }
-        verify(timeout = 1000, exactly = 1) { value.onExpire() }
+        assertFalse(expiringHashMap.isEmpty())
+        verify(timeout = 1000, exactly = 6) { value.expireAt() }
+        verify(timeout = 1000, exactly = 3) { value.onExpire() }
         confirmVerified(value)
+        assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
         every { value.expireAt() }.returns(now + 1200)
         expiringHashMap.getOrPut("test") { value }
-        verify(timeout = 2000, exactly = 4) { value.expireAt() }
-        verify(timeout = 2000, exactly = 1) { value.onExpire() }
+        verify(timeout = 2000, exactly = 10) { value.expireAt() }
+        verify(timeout = 2000, exactly = 4) { value.onExpire() }
         confirmVerified(value)
     }
 
