@@ -63,6 +63,10 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         return objects.remove(key)
     }
 
+    fun isEmpty(): Boolean {
+        return objects.isEmpty()
+    }
+
     private fun terminateExpiringSlot() {
         val now = System.currentTimeMillis()
 
