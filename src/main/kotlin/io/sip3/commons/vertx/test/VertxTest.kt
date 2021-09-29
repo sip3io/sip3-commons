@@ -55,10 +55,9 @@ open class VertxTest {
         assertTrue(context.awaitCompletion(timeout, TimeUnit.SECONDS))
         cleanup?.invoke()
 
-        vertx.close {
-            if (context.failed()) {
-                throw context.causeOfFailure()
-            }
+        vertx.close()
+        if (context.failed()) {
+            throw context.causeOfFailure()
         }
     }
 
