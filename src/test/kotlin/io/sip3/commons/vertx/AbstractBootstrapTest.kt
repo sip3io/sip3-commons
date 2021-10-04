@@ -108,7 +108,8 @@ class AbstractBootstrapTest : VertxTest() {
                         context.completeNow()
                     }
                 }
-            }
+            },
+            cleanup = this::removeRegistries
         )
     }
 
@@ -136,7 +137,8 @@ class AbstractBootstrapTest : VertxTest() {
                     context.completeNow()
                 }
                 server.listen(port)
-            }
+            },
+            cleanup = this::removeRegistries
         )
     }
 
@@ -165,7 +167,8 @@ class AbstractBootstrapTest : VertxTest() {
                         socket.handler { context.completeNow() }
                     }
                 }
-            }
+            },
+            cleanup = this::removeRegistries
         )
     }
 
@@ -193,7 +196,15 @@ class AbstractBootstrapTest : VertxTest() {
                     context.completeNow()
                 }
                 server.listen(port)
-            }
+            },
+            cleanup = this::removeRegistries
         )
+    }
+
+    private fun removeRegistries() {
+        Metrics.globalRegistry.registries.iterator().forEach { registry ->
+            Metrics.removeRegistry(registry)
+            registry.close()
+        }
     }
 }
