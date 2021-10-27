@@ -26,10 +26,11 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
     private val onExpire: (K, V) -> Unit
 ) {
 
-    private val expiringSlots = (0 until period).map { mutableMapOf<K, V>() }.toList()
+    private val expiringSlots = List(period) { mutableMapOf<K, V>() }
     private var expiringSlotIdx = 0
 
     private val objects = mutableMapOf<K, V>()
+    private val objectSlots = mutableMapOf<K, Int>()
 
     init {
         vertx.setPeriodic(delay) {
@@ -42,16 +43,29 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
     }
 
     fun put(key: K, value: V): V? {
-        val v = objects.put(key, value)
-        if (v == null) {
+        return objects.put(key, value).also { v ->
+            if (v != null) {
+                objectSlots.remove(key)?.let { expiringSlots[it].remove(key) }
+            }
+            objectSlots[key] = expiringSlotIdx
             expiringSlots[expiringSlotIdx][key] = value
         }
-        return v
     }
 
     fun getOrPut(key: K, defaultValue: () -> V): V {
         return objects.getOrPut(key) {
-            defaultValue.invoke().also { expiringSlots[expiringSlotIdx][key] = it }
+            objectSlots[key] = expiringSlotIdx
+            defaultValue.invoke().also {
+                expiringSlots[expiringSlotIdx][key] = it
+            }
+        }
+    }
+
+    fun touch(key: K) {
+        val value = objectSlots.remove(key)?.let { expiringSlots[it].remove(key) }
+        if (value != null) {
+            objectSlots[key] = expiringSlotIdx
+            expiringSlots[expiringSlotIdx][key] = value
         }
     }
 
@@ -60,6 +74,7 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
     }
 
     fun remove(key: K): V? {
+        objectSlots.remove(key)?.let { expiringSlots[it].remove(key) }
         return objects.remove(key)
     }
 
@@ -69,33 +84,32 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
     fun clear() {
         expiringSlots.forEach { it.clear() }
+        objectSlots.clear()
         objects.clear()
     }
 
     private fun terminateExpiringSlot() {
         val now = System.currentTimeMillis()
 
-        expiringSlots[expiringSlotIdx].apply {
-            forEach { (k, v) ->
-                val expireAt = expireAt(k, v)
+        expiringSlots[expiringSlotIdx].forEach { (k, v) ->
+            val expireAt = expireAt(k, v)
 
-                when {
-                    expireAt <= now -> {
-                        objects.remove(k)?.let { onExpire(k, it) }
-                    }
-                    else -> {
-                        var shift = ((expireAt - now) / delay).toInt() + 1
-                        if (shift >= period) {
-                            shift = period - 1
-                        }
-                        val nextExpiringSlotIdx = (expiringSlotIdx + shift) % period
-
-                        expiringSlots[nextExpiringSlotIdx][k] = v
-                    }
+            if (expireAt <= now) {
+                objectSlots.remove(k)
+                objects.remove(k)?.let { onExpire(k, it) }
+            } else {
+                var shift = ((expireAt - now) / delay).toInt() + 1
+                if (shift >= period) {
+                    shift = period - 1
                 }
+                val nextExpiringSlotIdx = (expiringSlotIdx + shift) % period
+
+                objectSlots[k] = nextExpiringSlotIdx
+                expiringSlots[nextExpiringSlotIdx][k] = v
             }
-            clear()
         }
+
+        expiringSlots[expiringSlotIdx].clear()
     }
 
     data class Builder<K, V>(

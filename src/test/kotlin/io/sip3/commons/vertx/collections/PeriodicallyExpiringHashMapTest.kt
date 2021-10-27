@@ -38,47 +38,60 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
             .onExpire { _, v -> v.onExpire() }
             .build(Vertx.vertx())
 
-        val value = mockk<Value>()
-        every { value.onExpire() }.just(Runs)
+        val value1 = mockk<Value>()
+        every { value1.onExpire() }.just(Runs)
+        val value2 = mockk<Value>()
+        every { value2.onExpire() }.just(Runs)
 
         var now = System.currentTimeMillis()
-        every { value.expireAt() }.returns(now - 100)
+        every { value1.expireAt() }.returns(now - 100)
         assertTrue(expiringHashMap.isEmpty())
-        expiringHashMap.getOrPut("test") { value }
+        expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
-        verify(timeout = 1000, exactly = 1) { value.expireAt() }
-        verify(timeout = 1000, exactly = 1) { value.onExpire() }
-        confirmVerified(value)
+        verify(timeout = 1000, exactly = 1) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 1) { value1.onExpire() }
+        confirmVerified(value1)
         assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
-        every { value.expireAt() }.returns(now + 200)
-        expiringHashMap.getOrPut("test") { value }
+        every { value1.expireAt() }.returns(now + 200)
+        expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
-        verify(timeout = 1000, exactly = 3) { value.expireAt() }
-        verify(timeout = 1000, exactly = 2) { value.onExpire() }
-        confirmVerified(value)
+        verify(timeout = 1000, exactly = 3) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 2) { value1.onExpire() }
+        confirmVerified(value1)
         assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
-        every { value.expireAt() }.returns(now + 600)
-        expiringHashMap.getOrPut("test") { value }
+        every { value1.expireAt() }.returns(now + 600)
+        expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
-        verify(timeout = 1000, exactly = 6) { value.expireAt() }
-        verify(timeout = 1000, exactly = 3) { value.onExpire() }
-        confirmVerified(value)
+        verify(timeout = 1000, exactly = 6) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 3) { value1.onExpire() }
+        confirmVerified(value1)
         assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
-        every { value.expireAt() }.returns(now + 1200)
-        expiringHashMap.getOrPut("test") { value }
-        verify(timeout = 2000, exactly = 10) { value.expireAt() }
-        verify(timeout = 2000, exactly = 4) { value.onExpire() }
-        confirmVerified(value)
+        every { value1.expireAt() }.returns(now + 1200)
+        expiringHashMap.getOrPut("test") { value1 }
+        verify(timeout = 2000, exactly = 10) { value1.expireAt() }
+        verify(timeout = 2000, exactly = 4) { value1.onExpire() }
+        confirmVerified(value1)
 
         now = System.currentTimeMillis()
-        every { value.expireAt() }.returns(now + 1200)
-        expiringHashMap.getOrPut("test") { value }
+        every { value1.expireAt() }.returns(now + 1200)
+        every { value2.expireAt() }.returns(now + 200)
+        expiringHashMap.getOrPut("test") { value1 }
+        verify(timeout = 2000, exactly = 11) { value1.expireAt() }
+        expiringHashMap.put("test", value2)
+        verify(timeout = 2000, exactly = 2) { value2.expireAt() }
+        verify(timeout = 2000, exactly = 1) { value2.onExpire() }
+        confirmVerified(value1)
+        confirmVerified(value2)
+
+        now = System.currentTimeMillis()
+        every { value1.expireAt() }.returns(now + 1200)
+        expiringHashMap.getOrPut("test") { value1 }
         expiringHashMap.clear()
         assertTrue(expiringHashMap.isEmpty())
     }
