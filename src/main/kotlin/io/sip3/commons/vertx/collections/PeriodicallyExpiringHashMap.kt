@@ -34,11 +34,14 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
     init {
         vertx.setPeriodic(delay) {
-            terminateExpiringSlot()
+            val currentExpiringSlotIdx = expiringSlotIdx
+
             expiringSlotIdx += 1
             if (expiringSlotIdx >= period) {
                 expiringSlotIdx = 0
             }
+
+            terminateExpiringSlot(currentExpiringSlotIdx)
         }
     }
 
@@ -88,10 +91,10 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         objects.clear()
     }
 
-    private fun terminateExpiringSlot() {
+    private fun terminateExpiringSlot(currentExpiringSlotIdx: Int) {
         val now = System.currentTimeMillis()
 
-        expiringSlots[expiringSlotIdx].forEach { (k, v) ->
+        expiringSlots[currentExpiringSlotIdx].forEach { (k, v) ->
             val expireAt = expireAt(k, v)
 
             if (expireAt <= now) {
@@ -102,14 +105,14 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
                 if (shift >= period) {
                     shift = period - 1
                 }
-                val nextExpiringSlotIdx = (expiringSlotIdx + shift) % period
+                val nextExpiringSlotIdx = (currentExpiringSlotIdx + shift) % period
 
                 objectSlots[k] = nextExpiringSlotIdx
                 expiringSlots[nextExpiringSlotIdx][k] = v
             }
         }
 
-        expiringSlots[expiringSlotIdx].clear()
+        expiringSlots[currentExpiringSlotIdx].clear()
     }
 
     data class Builder<K, V>(
