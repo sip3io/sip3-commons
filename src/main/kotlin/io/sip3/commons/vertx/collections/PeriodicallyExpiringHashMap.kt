@@ -141,9 +141,3 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         fun build(vertx: Vertx) = PeriodicallyExpiringHashMap(vertx, delay, period, expireAt, onRemain, onExpire)
     }
 }
-
-fun main() {
-    val hosts = "wtf:".split(":")
-    println(hosts[0].isBlank())
-    println(hosts[1])
-}
