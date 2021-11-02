@@ -125,8 +125,14 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         var onRemain: (K, V) -> Unit = { _: K, _: V -> },
         var onExpire: (K, V) -> Unit = { _: K, _: V -> }
     ) {
-        fun delay(delay: Long) = apply { this.delay = delay }
-        fun period(period: Int) = apply { this.period = period }
+        fun delay(delay: Long) = apply {
+            if (delay <= 0) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' delay must be greater than 0.")
+            this.delay = delay
+        }
+        fun period(period: Int) = apply {
+            if (period <= 1) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' delay must be greater than 1.")
+            this.period = period
+        }
         fun expireAt(expireAt: (K, V) -> Long) = apply { this.expireAt = expireAt }
         fun onRemain(onRemain: (K, V) -> Unit) = apply { this.onRemain = onRemain }
         fun onExpire(onExpire: (K, V) -> Unit) = apply { this.onExpire = onExpire }
