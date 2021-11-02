@@ -77,6 +77,14 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         return objects[key]
     }
 
+    fun forEach(action: (K, V) -> Unit) {
+        objects.forEach { (k, v) -> action.invoke(k, v) }
+    }
+
+    fun any(predicate: (K, V) -> Boolean): Boolean {
+        return objects.any { (k, v) -> predicate.invoke(k, v) }
+    }
+
     fun remove(key: K): V? {
         objectSlots.remove(key)?.let { expiringSlots[it].remove(key) }
         return objects.remove(key)
@@ -129,10 +137,12 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
             if (delay <= 0) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' delay must be greater than 0.")
             this.delay = delay
         }
+
         fun period(period: Int) = apply {
             if (period <= 1) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' delay must be greater than 1.")
             this.period = period
         }
+
         fun expireAt(expireAt: (K, V) -> Long) = apply { this.expireAt = expireAt }
         fun onRemain(onRemain: (Long, K, V) -> Unit) = apply { this.onRemain = onRemain }
         fun onRemain(onRemain: (K, V) -> Unit) = apply { this.onRemain = { _, k, v -> onRemain.invoke(k, v) } }
