@@ -120,7 +120,7 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
     data class Builder<K, V>(
         var delay: Long = 1000,
-        var period: Int = 60,
+        var period: Int = 2,
         var expireAt: (K, V) -> Long = { _: K, _: V -> Long.MAX_VALUE },
         var onRemain: (Long, K, V) -> Unit = { _: Long, _: K, _: V -> },
         var onExpire: (K, V) -> Unit = { _: K, _: V -> }
@@ -140,4 +140,10 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
         fun build(vertx: Vertx) = PeriodicallyExpiringHashMap(vertx, delay, period, expireAt, onRemain, onExpire)
     }
+}
+
+fun main() {
+    val hosts = "wtf:".split(":")
+    println(hosts[0].isBlank())
+    println(hosts[1])
 }
