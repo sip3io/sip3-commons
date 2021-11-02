@@ -23,6 +23,7 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
     private val delay: Long,
     private val period: Int,
     private val expireAt: (K, V) -> Long,
+    private val onRemain: (K, V) -> Unit,
     private val onExpire: (K, V) -> Unit
 ) {
 
@@ -34,11 +35,14 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
     init {
         vertx.setPeriodic(delay) {
-            terminateExpiringSlot()
+            val currentExpiringSlotIdx = expiringSlotIdx
+
             expiringSlotIdx += 1
             if (expiringSlotIdx >= period) {
                 expiringSlotIdx = 0
             }
+
+            terminateExpiringSlot(currentExpiringSlotIdx)
         }
     }
 
@@ -88,10 +92,10 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         objects.clear()
     }
 
-    private fun terminateExpiringSlot() {
+    private fun terminateExpiringSlot(currentExpiringSlotIdx: Int) {
         val now = System.currentTimeMillis()
 
-        expiringSlots[expiringSlotIdx].forEach { (k, v) ->
+        expiringSlots[currentExpiringSlotIdx].forEach { (k, v) ->
             val expireAt = expireAt(k, v)
 
             if (expireAt <= now) {
@@ -102,27 +106,31 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
                 if (shift >= period) {
                     shift = period - 1
                 }
-                val nextExpiringSlotIdx = (expiringSlotIdx + shift) % period
+                val nextExpiringSlotIdx = (currentExpiringSlotIdx + shift) % period
 
                 objectSlots[k] = nextExpiringSlotIdx
                 expiringSlots[nextExpiringSlotIdx][k] = v
+
+                objects[k]?.let { onRemain(k, it) }
             }
         }
 
-        expiringSlots[expiringSlotIdx].clear()
+        expiringSlots[currentExpiringSlotIdx].clear()
     }
 
     data class Builder<K, V>(
         var delay: Long = 1000,
         var period: Int = 60,
         var expireAt: (K, V) -> Long = { _: K, _: V -> Long.MAX_VALUE },
+        var onRemain: (K, V) -> Unit = { _: K, _: V -> },
         var onExpire: (K, V) -> Unit = { _: K, _: V -> }
     ) {
         fun delay(delay: Long) = apply { this.delay = delay }
         fun period(period: Int) = apply { this.period = period }
         fun expireAt(expireAt: (K, V) -> Long) = apply { this.expireAt = expireAt }
+        fun onRemain(onRemain: (K, V) -> Unit) = apply { this.onRemain = onRemain }
         fun onExpire(onExpire: (K, V) -> Unit) = apply { this.onExpire = onExpire }
 
-        fun build(vertx: Vertx) = PeriodicallyExpiringHashMap(vertx, delay, period, expireAt, onExpire)
+        fun build(vertx: Vertx) = PeriodicallyExpiringHashMap(vertx, delay, period, expireAt, onRemain, onExpire)
     }
 }

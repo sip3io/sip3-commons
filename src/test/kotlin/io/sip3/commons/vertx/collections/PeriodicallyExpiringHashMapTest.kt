@@ -35,12 +35,15 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
             .delay(100)
             .period(5)
             .expireAt { _, v -> v.expireAt() }
+            .onRemain { _, v -> v.onRemain() }
             .onExpire { _, v -> v.onExpire() }
             .build(Vertx.vertx())
 
         val value1 = mockk<Value>()
+        every { value1.onRemain() }.just(Runs)
         every { value1.onExpire() }.just(Runs)
         val value2 = mockk<Value>()
+        every { value2.onRemain() }.just(Runs)
         every { value2.onExpire() }.just(Runs)
 
         var now = System.currentTimeMillis()
@@ -49,6 +52,7 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
         expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
         verify(timeout = 1000, exactly = 1) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 0) { value1.onRemain() }
         verify(timeout = 1000, exactly = 1) { value1.onExpire() }
         confirmVerified(value1)
         assertTrue(expiringHashMap.isEmpty())
@@ -58,6 +62,7 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
         expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
         verify(timeout = 1000, exactly = 3) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 1) { value1.onRemain() }
         verify(timeout = 1000, exactly = 2) { value1.onExpire() }
         confirmVerified(value1)
         assertTrue(expiringHashMap.isEmpty())
@@ -67,6 +72,7 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
         expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
         verify(timeout = 1000, exactly = 6) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 3) { value1.onRemain() }
         verify(timeout = 1000, exactly = 3) { value1.onExpire() }
         confirmVerified(value1)
         assertTrue(expiringHashMap.isEmpty())
@@ -75,6 +81,7 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
         every { value1.expireAt() }.returns(now + 1200)
         expiringHashMap.getOrPut("test") { value1 }
         verify(timeout = 2000, exactly = 10) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 6) { value1.onRemain() }
         verify(timeout = 2000, exactly = 4) { value1.onExpire() }
         confirmVerified(value1)
 
@@ -83,8 +90,10 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
         every { value2.expireAt() }.returns(now + 200)
         expiringHashMap.getOrPut("test") { value1 }
         verify(timeout = 2000, exactly = 11) { value1.expireAt() }
+        verify(timeout = 1000, exactly = 7) { value1.onRemain() }
         expiringHashMap.put("test", value2)
         verify(timeout = 2000, exactly = 2) { value2.expireAt() }
+        verify(timeout = 2000, exactly = 1) { value2.onRemain() }
         verify(timeout = 2000, exactly = 1) { value2.onExpire() }
         confirmVerified(value1)
         confirmVerified(value2)
@@ -103,6 +112,7 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
 
     inner class Value {
         fun expireAt(): Long = System.currentTimeMillis()
+        fun onRemain() {}
         fun onExpire() {}
     }
 }
