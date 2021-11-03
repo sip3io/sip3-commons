@@ -58,7 +58,7 @@ class PeriodicallyExpiringHashMapTest : VertxTest() {
         assertTrue(expiringHashMap.isEmpty())
 
         now = System.currentTimeMillis()
-        every { value1.expireAt() }.returns(now + 200)
+        every { value1.expireAt() }.returns(now + 300)
         expiringHashMap.getOrPut("test") { value1 }
         assertFalse(expiringHashMap.isEmpty())
         verify(timeout = 1000, exactly = 3) { value1.expireAt() }
