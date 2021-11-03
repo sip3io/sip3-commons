@@ -17,6 +17,7 @@
 package io.sip3.commons.vertx.collections
 
 import io.vertx.core.Vertx
+import java.lang.Long.min
 
 class PeriodicallyExpiringHashMap<K, V> private constructor(
     vertx: Vertx,
@@ -24,8 +25,13 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
     private val period: Int,
     private val expireAt: (K, V) -> Long,
     private val onRemain: (Long, K, V) -> Unit,
-    private val onExpire: (K, V) -> Unit
+    private val onExpire: (Long, K, V) -> Unit
 ) {
+
+    companion object {
+
+        const val MAX_INT = Int.MAX_VALUE.toLong()
+    }
 
     private val expiringSlots = List(period) { mutableMapOf<K, V>() }
     private var expiringSlotIdx = 0
@@ -81,10 +87,6 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         objects.forEach { (k, v) -> action.invoke(k, v) }
     }
 
-    fun any(predicate: (K, V) -> Boolean): Boolean {
-        return objects.any { (k, v) -> predicate.invoke(k, v) }
-    }
-
     fun remove(key: K): V? {
         objectSlots.remove(key)?.let { expiringSlots[it].remove(key) }
         return objects.remove(key)
@@ -92,6 +94,10 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
     fun isEmpty(): Boolean {
         return objects.isEmpty()
+    }
+
+    fun size(): Int {
+        return objects.size
     }
 
     fun clear() {
@@ -108,9 +114,9 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
 
             if (expireAt <= now) {
                 objectSlots.remove(k)
-                objects.remove(k)?.let { onExpire(k, it) }
+                objects.remove(k)?.let { onExpire(now, k, it) }
             } else {
-                var shift = ((expireAt - now) / delay).toInt() + 1
+                var shift = min(((expireAt - now) / delay) + 1, MAX_INT).toInt()
                 if (shift >= period) {
                     shift = period - 1
                 }
@@ -131,7 +137,7 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         var period: Int = 2,
         var expireAt: (K, V) -> Long = { _: K, _: V -> Long.MAX_VALUE },
         var onRemain: (Long, K, V) -> Unit = { _: Long, _: K, _: V -> },
-        var onExpire: (K, V) -> Unit = { _: K, _: V -> }
+        var onExpire: (Long, K, V) -> Unit = { _: Long, _: K, _: V -> },
     ) {
         fun delay(delay: Long) = apply {
             if (delay <= 0) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' delay must be greater than 0.")
@@ -146,7 +152,8 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         fun expireAt(expireAt: (K, V) -> Long) = apply { this.expireAt = expireAt }
         fun onRemain(onRemain: (Long, K, V) -> Unit) = apply { this.onRemain = onRemain }
         fun onRemain(onRemain: (K, V) -> Unit) = apply { this.onRemain = { _, k, v -> onRemain.invoke(k, v) } }
-        fun onExpire(onExpire: (K, V) -> Unit) = apply { this.onExpire = onExpire }
+        fun onExpire(onExpire: (Long, K, V) -> Unit) = apply { this.onExpire = onExpire }
+        fun onExpire(onExpire: (K, V) -> Unit) = apply { this.onExpire = { _, k, v -> onExpire.invoke(k, v) } }
 
         fun build(vertx: Vertx) = PeriodicallyExpiringHashMap(vertx, delay, period, expireAt, onRemain, onExpire)
     }
