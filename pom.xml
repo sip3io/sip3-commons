@@ -6,7 +6,7 @@
 
     <groupId>io.sip3.commons</groupId>
     <artifactId>sip3-commons</artifactId>
-    <version>2021.4.1-SNAPSHOT</version>
+    <version>2022.1.1-SNAPSHOT</version>
 
     <parent>
         <groupId>io.sip3</groupId>
