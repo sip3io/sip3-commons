@@ -30,9 +30,10 @@ class RtpHeaderPayloadTest {
             ssrc = 3
             timestamp = 4
             marker = true
+            recorded = true
         }
         val encoded = payload.encode()
-        assertEquals(22, encoded.capacity())
+        assertEquals(23, encoded.capacity())
 
         val decoded = RtpHeaderPayload().apply { decode(encoded) }
         payload.apply {
@@ -41,6 +42,7 @@ class RtpHeaderPayloadTest {
             assertEquals(ssrc, decoded.ssrc)
             assertEquals(timestamp, decoded.timestamp)
             assertEquals(marker, decoded.marker)
+            assertEquals(recorded, decoded.recorded)
         }
     }
 }

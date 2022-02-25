@@ -26,14 +26,16 @@ class RtpHeaderPayload : Encodable, Decodable {
     var timestamp: Long = 0
     var ssrc: Long = 0
     var marker: Boolean = false
+    var recorded: Boolean = false
 
     override fun encode(): ByteBuf {
-        return Unpooled.buffer(22).apply {
+        return Unpooled.buffer(23).apply {
             writeByte(payloadType.toInt())
             writeInt(sequenceNumber)
             writeLong(timestamp)
             writeLong(ssrc)
             writeBoolean(marker)
+            writeBoolean(recorded)
         }
     }
 
@@ -43,5 +45,6 @@ class RtpHeaderPayload : Encodable, Decodable {
         timestamp = buffer.readLong()
         ssrc = buffer.readLong()
         marker = buffer.readBoolean()
+        recorded = buffer.readBoolean()
     }
 }
