@@ -58,7 +58,7 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     private val logger = KotlinLogging.logger {}
 
-    open val configLocations = emptyList<String>()
+    open val configLocations = listOf("config.location")
 
     override fun start() {
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
