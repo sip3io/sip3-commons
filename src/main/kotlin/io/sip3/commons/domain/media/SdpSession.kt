@@ -27,9 +27,14 @@ open class SdpSession {
     lateinit var dst: MediaAddress
 
     lateinit var codecs: List<Codec>
+    var telephoneEvents: List<TelephoneEvent>? = null
     var ptime: Int = 20
 
     fun codec(payloadType: Int): Codec? {
         return codecs.firstOrNull { it.payloadTypes.contains(payloadType) }
+    }
+
+    fun telephoneEvent(payloadType: Int): TelephoneEvent? {
+        return telephoneEvents?.firstOrNull { it.payloadType == payloadType }
     }
 }
