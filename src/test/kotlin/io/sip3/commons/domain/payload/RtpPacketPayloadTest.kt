@@ -19,29 +19,31 @@ package io.sip3.commons.domain.payload
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class RtpHeaderPayloadTest {
+class RtpPacketPayloadTest {
 
     @Test
     fun `Encode-decode validation`() {
 
-        val payload = RtpHeaderPayload().apply {
+        val payload = RtpPacketPayload().apply {
             payloadType = 1
             sequenceNumber = 2
             ssrc = 3
             timestamp = 4
             marker = true
+            event = 128
             recorded = true
         }
         val encoded = payload.encode()
-        assertEquals(23, encoded.capacity())
+        assertEquals(27, encoded.capacity())
 
-        val decoded = RtpHeaderPayload().apply { decode(encoded) }
+        val decoded = RtpPacketPayload().apply { decode(encoded) }
         payload.apply {
             assertEquals(payloadType, decoded.payloadType)
             assertEquals(sequenceNumber, decoded.sequenceNumber)
             assertEquals(ssrc, decoded.ssrc)
             assertEquals(timestamp, decoded.timestamp)
             assertEquals(marker, decoded.marker)
+            assertEquals(event, decoded.event)
             assertEquals(recorded, decoded.recorded)
         }
     }
