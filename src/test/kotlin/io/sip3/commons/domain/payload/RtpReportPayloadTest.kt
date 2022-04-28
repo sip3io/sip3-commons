@@ -66,6 +66,8 @@ class RtpReportPayloadTest {
     fun `Encode-decode validation`() {
         val rtpReportPayload = getRtpReportPayload(CALL_ID, CODEC_NAME)
         val byteBuf = rtpReportPayload.encode()
+        assertEquals(byteBuf.writerIndex(), byteBuf.capacity())
+
         val expectedLength = RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH + CODEC_NAME_VALUE_LENGTH
         assertEquals(expectedLength, byteBuf.capacity())
 
@@ -105,6 +107,7 @@ class RtpReportPayloadTest {
     fun `Encode-decode validation without callId and codecName`() {
         val rtpReportPayload = getRtpReportPayload(null, null)
         val byteBuf = rtpReportPayload.encode()
+        assertEquals(byteBuf.writerIndex(), byteBuf.capacity())
         assertEquals(RtpReportPayload.BASE_PAYLOAD_LENGTH, byteBuf.capacity())
 
         val decoded = RtpReportPayload().apply { decode(byteBuf) }
@@ -142,6 +145,7 @@ class RtpReportPayloadTest {
     fun `Encode RtpReportPayload and validate tag, length and value`() {
         val rtpReportPayload = getRtpReportPayload(CALL_ID, CODEC_NAME)
         val byteBuf = rtpReportPayload.encode()
+        assertEquals(byteBuf.writerIndex(), byteBuf.capacity())
         val expectedLength = RtpReportPayload.BASE_PAYLOAD_LENGTH + CALL_ID_VALUE_LENGTH + CODEC_NAME_VALUE_LENGTH
         assertEquals(expectedLength, byteBuf.capacity())
 

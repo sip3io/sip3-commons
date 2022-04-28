@@ -39,6 +39,6 @@ object PacketTypes {
     // Recording (Internal SIP3 protocol)
     const val REC: Byte = 7
 
-    // RTP Named Telephone Event (Internal SIP3 protocol)
-    const val TELEPHONE_EVENT: Byte = 8
+    // RTP Event (Internal SIP3 protocol)
+    const val RTPE: Byte = 8
 }

@@ -21,11 +21,11 @@ import io.netty.buffer.Unpooled
 import io.sip3.commons.util.writeTlv
 import java.nio.charset.Charset
 
-open class TelephoneEventPayload : Encodable, Decodable {
+open class RtpEventPayload : Encodable, Decodable {
 
     companion object {
 
-        const val BASE_PAYLOAD_LENGTH = 51
+        const val BASE_PAYLOAD_LENGTH = 62
 
         const val TAG_PAYLOAD_TYPE = 1
         const val TAG_SSRC = 2

@@ -34,6 +34,7 @@ class RtpPacketPayloadTest {
             recorded = true
         }
         val encoded = payload.encode()
+        assertEquals(encoded.writerIndex(), encoded.capacity())
         assertEquals(27, encoded.capacity())
 
         val decoded = RtpPacketPayload().apply { decode(encoded) }

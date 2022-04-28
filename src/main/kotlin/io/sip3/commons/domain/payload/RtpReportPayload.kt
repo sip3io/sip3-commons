@@ -25,7 +25,7 @@ open class RtpReportPayload : Encodable, Decodable {
 
     companion object {
 
-        const val BASE_PAYLOAD_LENGTH = 138
+        const val BASE_PAYLOAD_LENGTH = 136
 
         const val SOURCE_RTP = 0.toByte()
         const val SOURCE_RTCP = 1.toByte()

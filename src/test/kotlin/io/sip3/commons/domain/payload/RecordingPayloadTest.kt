@@ -40,6 +40,7 @@ class RecordingPayloadTest {
     @Test
     fun `Encode-decode validation`() {
         val encoded = RECORDING.encode()
+        assertEquals(encoded.writerIndex(), encoded.capacity());
         assertEquals(74, encoded.capacity());
 
         val decoded = RecordingPayload().apply {
