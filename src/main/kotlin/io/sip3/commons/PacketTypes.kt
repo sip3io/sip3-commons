@@ -38,4 +38,7 @@ object PacketTypes {
 
     // Recording (Internal SIP3 protocol)
     const val REC: Byte = 7
+
+    // RTP Event (Internal SIP3 protocol)
+    const val RTPE: Byte = 8
 }

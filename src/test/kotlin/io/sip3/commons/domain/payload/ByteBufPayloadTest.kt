@@ -27,6 +27,7 @@ class ByteBufPayloadTest {
         val buffer = Unpooled.wrappedBuffer(byteArrayOf(0, 1, 2, 3))
         val payload = ByteBufPayload(buffer)
         val encoded = payload.encode()
+        assertEquals(encoded.writerIndex(), encoded.capacity());
         assertEquals(buffer.capacity(), encoded.capacity())
 
         assertEquals(buffer, encoded)

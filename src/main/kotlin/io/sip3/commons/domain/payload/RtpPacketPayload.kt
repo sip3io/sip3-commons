@@ -19,7 +19,7 @@ package io.sip3.commons.domain.payload
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 
-class RtpHeaderPayload : Encodable, Decodable {
+class RtpPacketPayload : Encodable, Decodable {
 
     var payloadType: Byte = 0
     var sequenceNumber: Int = 0
@@ -27,15 +27,17 @@ class RtpHeaderPayload : Encodable, Decodable {
     var ssrc: Long = 0
     var marker: Boolean = false
     var recorded: Boolean = false
+    var event: Int = 0
 
     override fun encode(): ByteBuf {
-        return Unpooled.buffer(23).apply {
+        return Unpooled.buffer(27).apply {
             writeByte(payloadType.toInt())
             writeInt(sequenceNumber)
             writeLong(timestamp)
             writeLong(ssrc)
             writeBoolean(marker)
             writeBoolean(recorded)
+            writeInt(event)
         }
     }
 
@@ -46,5 +48,6 @@ class RtpHeaderPayload : Encodable, Decodable {
         ssrc = buffer.readLong()
         marker = buffer.readBoolean()
         recorded = buffer.readBoolean()
+        event = buffer.readInt()
     }
 }
