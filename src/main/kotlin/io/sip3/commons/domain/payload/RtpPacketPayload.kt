@@ -27,7 +27,7 @@ class RtpPacketPayload : Encodable, Decodable {
     var ssrc: Long = 0
     var marker: Boolean = false
     var recorded: Boolean = false
-    var event: Int = 0
+    var event: Int = Int.MIN_VALUE
 
     override fun encode(): ByteBuf {
         return Unpooled.buffer(27).apply {
