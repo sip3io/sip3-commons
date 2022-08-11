@@ -24,6 +24,9 @@ import io.micrometer.elastic.ElasticConfig
 import io.micrometer.elastic.ElasticMeterRegistry
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxMeterRegistry
+import io.micrometer.prometheus.HistogramFlavor
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.micrometer.statsd.StatsdConfig
 import io.micrometer.statsd.StatsdFlavor
 import io.micrometer.statsd.StatsdMeterRegistry
@@ -195,6 +198,23 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun password() = elastic.getString("password") ?: super.password()
                 }, Clock.SYSTEM)
                 registry.add(elasticRegistry)
+            }
+
+            // Prometheus
+            meters.getJsonObject("prometheus")?.let { prometheus ->
+                val prometheusRegistry = PrometheusMeterRegistry(object : PrometheusConfig {
+                    override fun get(k: String) = null
+                    override fun step() = Duration.ofMillis(prometheus.getLong("step")) ?: super.step()
+                    override fun histogramFlavor(): HistogramFlavor {
+                        val flavour = prometheus.getString("histogram-flavour") ?: return HistogramFlavor.Prometheus
+                        return try {
+                            HistogramFlavor.valueOf(flavour)
+                        } catch (e: Exception) {
+                            HistogramFlavor.Prometheus
+                        }
+                    }
+                })
+                registry.add(prometheusRegistry)
             }
         }
     }

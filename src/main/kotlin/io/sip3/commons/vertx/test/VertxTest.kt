@@ -17,6 +17,7 @@
 package io.sip3.commons.vertx.test
 
 import io.sip3.commons.vertx.util.registerLocalCodec
+import io.vertx.core.Handler
 import io.vertx.core.Verticle
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.extension.ExtendWith
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 
@@ -39,6 +41,9 @@ open class VertxTest {
 
     lateinit var context: VertxTestContext
     lateinit var vertx: Vertx
+    lateinit var completed: AtomicBoolean
+
+    private val timers = mutableListOf<Long>()
 
     fun runTest(
         deploy: (suspend () -> Unit)? = null, execute: (suspend () -> Unit)? = null,
@@ -47,6 +52,8 @@ open class VertxTest {
         context = VertxTestContext()
         vertx = Vertx.vertx()
         vertx.registerLocalCodec()
+        completed = AtomicBoolean(false)
+        timers.clear()
         GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
             assert?.invoke()
             deploy?.invoke()
@@ -71,5 +78,25 @@ open class VertxTest {
             instances = instances
         )
         deployVerticle(verticle.java.canonicalName, deploymentOptions).await()
+    }
+
+    fun Vertx.setPeriodicTimer(delay: Long, handler: Handler<Long>) {
+        val timer = vertx.setPeriodic(delay) { t ->
+            if (!completed.get()) {
+                handler.handle(t)
+            }
+        }
+
+        timers.add(timer)
+    }
+
+    fun VertxTestContext.cancelTimersAndCompleteNow() {
+        completed.set(true)
+
+        timers.forEach { t ->
+            vertx.cancelTimer(t)
+        }
+
+        completeNow()
     }
 }

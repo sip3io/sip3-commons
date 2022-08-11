@@ -23,6 +23,7 @@ import io.sip3.commons.vertx.test.VertxTest
 import io.sip3.commons.vertx.util.endpoints
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.datagram.DatagramSocketOptions
+import io.vertx.core.http.RequestOptions
 import io.vertx.core.json.JsonObject
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -196,6 +197,43 @@ class AbstractBootstrapTest : VertxTest() {
                     context.completeNow()
                 }
                 server.listen(port)
+            },
+            cleanup = this::removeRegistries
+        )
+    }
+
+    @Test
+    fun `Retrieve Prometheus counters`() {
+        val port = findRandomPort()
+        runTest(
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("metrics", JsonObject().apply {
+                        put("prometheus", JsonObject().apply {
+                            put("port", port)
+                            put("step", 1000)
+                        })
+                    })
+                })
+            },
+            execute = {
+                vertx.setPeriodicTimer(100) { Metrics.counter("test").increment() }
+                vertx.setPeriodicTimer(200) {
+                    vertx.createHttpClient().request(RequestOptions().apply {
+                        this.port = port
+                    }).onSuccess { request ->
+                        request.send().onSuccess { response ->
+                            if (response.statusCode() == 200) {
+                                response.body().onSuccess { body ->
+                                    context.verify {
+                                        assertTrue(body.toString().contains("test_total"))
+                                    }
+                                    context.cancelTimersAndCompleteNow()
+                                }
+                            }
+                        }
+                    }
+                }
             },
             cleanup = this::removeRegistries
         )
