@@ -217,8 +217,8 @@ class AbstractBootstrapTest : VertxTest() {
                 })
             },
             execute = {
-                vertx.setPeriodicTimer(100) { Metrics.counter("test").increment() }
-                vertx.setPeriodicTimer(200) {
+                vertx.setPeriodic(100) { Metrics.counter("test").increment() }
+                vertx.setPeriodic(200) {
                     vertx.createHttpClient().request(RequestOptions().apply {
                         this.port = port
                     }).onSuccess { request ->
@@ -228,7 +228,7 @@ class AbstractBootstrapTest : VertxTest() {
                                     context.verify {
                                         assertTrue(body.toString().contains("test_total"))
                                     }
-                                    context.cancelTimersAndCompleteNow()
+                                    context.completeNow()
                                 }
                             }
                         }

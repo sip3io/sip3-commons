@@ -17,9 +17,9 @@
 package io.sip3.commons.vertx.test
 
 import io.sip3.commons.vertx.util.registerLocalCodec
-import io.vertx.core.Handler
 import io.vertx.core.Verticle
 import io.vertx.core.Vertx
+import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.extension.ExtendWith
 import java.net.ServerSocket
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 
@@ -40,29 +40,31 @@ import kotlin.reflect.KClass
 open class VertxTest {
 
     lateinit var context: VertxTestContext
-    lateinit var vertx: Vertx
-    lateinit var completed: AtomicBoolean
 
-    private val timers = mutableListOf<Long>()
+    lateinit var vertx: Vertx
 
     fun runTest(
         deploy: (suspend () -> Unit)? = null, execute: (suspend () -> Unit)? = null,
         assert: (suspend () -> Unit)? = null, cleanup: (() -> Unit)? = null, timeout: Long = 10
     ) {
         context = VertxTestContext()
-        vertx = Vertx.vertx()
-        vertx.registerLocalCodec()
-        completed = AtomicBoolean(false)
-        timers.clear()
+
+        vertx = Vertx.vertx(VertxOptions().apply {
+            eventLoopPoolSize = 1
+        }).apply {
+            registerLocalCodec()
+        }
+
         GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
             assert?.invoke()
             deploy?.invoke()
             execute?.invoke()
         }
+
         assertTrue(context.awaitCompletion(timeout, TimeUnit.SECONDS))
         cleanup?.invoke()
+        (vertx.close().toCompletionStage() as CompletableFuture<*>).get()
 
-        vertx.close()
         if (context.failed()) {
             throw context.causeOfFailure()
         }
@@ -78,25 +80,5 @@ open class VertxTest {
             instances = instances
         )
         deployVerticle(verticle.java.canonicalName, deploymentOptions).await()
-    }
-
-    fun Vertx.setPeriodicTimer(delay: Long, handler: Handler<Long>) {
-        val timer = vertx.setPeriodic(delay) { t ->
-            if (!completed.get()) {
-                handler.handle(t)
-            }
-        }
-
-        timers.add(timer)
-    }
-
-    fun VertxTestContext.cancelTimersAndCompleteNow() {
-        completed.set(true)
-
-        timers.forEach { t ->
-            vertx.cancelTimer(t)
-        }
-
-        completeNow()
     }
 }
