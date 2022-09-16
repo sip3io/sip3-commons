@@ -22,7 +22,9 @@ import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig
 import io.micrometer.elastic.ElasticConfig
 import io.micrometer.elastic.ElasticMeterRegistry
+import io.micrometer.influx.InfluxApiVersion
 import io.micrometer.influx.InfluxConfig
+import io.micrometer.influx.InfluxConsistency
 import io.micrometer.influx.InfluxMeterRegistry
 import io.micrometer.prometheus.HistogramFlavor
 import io.micrometer.prometheus.PrometheusConfig
@@ -30,6 +32,7 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.micrometer.statsd.StatsdConfig
 import io.micrometer.statsd.StatsdFlavor
 import io.micrometer.statsd.StatsdMeterRegistry
+import io.micrometer.statsd.StatsdProtocol
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
@@ -149,13 +152,36 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("influxdb")?.let { influxdb ->
                 val influxMeterRegistry = InfluxMeterRegistry(object : InfluxConfig {
                     override fun get(k: String) = null
+                    override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun uri() = influxdb.getString("uri") ?: super.uri()
                     override fun db() = influxdb.getString("db") ?: super.db()
-                    override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun retentionPolicy() = influxdb.getString("retention-policy") ?: super.retentionPolicy()
                     override fun retentionDuration() = influxdb.getString("retention-duration") ?: super.retentionDuration()
                     override fun retentionShardDuration() = influxdb.getString("retention-shard-duration") ?: super.retentionShardDuration()
                     override fun retentionReplicationFactor() = influxdb.getInteger("retention-replication-factor") ?: super.retentionReplicationFactor()
+                    override fun userName() = influxdb.getString("username") ?: super.userName()
+                    override fun password() = influxdb.getString("password") ?: super.password()
+                    override fun token() = influxdb.getString("token") ?: super.token()
+                    override fun compressed() = influxdb.getBoolean("compressed") ?: super.compressed()
+                    override fun autoCreateDb() = influxdb.getBoolean("auto-create-db") ?: super.autoCreateDb()
+                    override fun apiVersion(): InfluxApiVersion {
+                        val version = influxdb.getString("version") ?: return InfluxApiVersion.V1
+                        return try {
+                            InfluxApiVersion.valueOf(version.uppercase())
+                        } catch (e: Exception) {
+                            InfluxApiVersion.V1
+                        }
+                    }
+                    override fun org() = influxdb.getString("org") ?: super.org()
+                    override fun bucket() = influxdb.getString("bucket") ?: super.bucket()
+                    override fun consistency(): InfluxConsistency {
+                        val consistency = influxdb.getString("consistency") ?: return InfluxConsistency.ONE
+                        return try {
+                            InfluxConsistency.valueOf(consistency.uppercase())
+                        } catch (e: Exception) {
+                            InfluxConsistency.ONE
+                        }
+                    }
                 }, Clock.SYSTEM)
                 registry.add(influxMeterRegistry)
             }
@@ -164,12 +190,23 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("statsd")?.let { statsd ->
                 val statsdRegistry = StatsdMeterRegistry(object : StatsdConfig {
                     override fun get(k: String) = null
+                    override fun step() = Duration.ofMillis(statsd.getLong("step")) ?: super.step()
+                    override fun enabled() = statsd.getBoolean("enabled") ?: super.enabled()
                     override fun host() = statsd.getString("host") ?: super.host()
                     override fun port() = statsd.getInteger("port") ?: super.port()
-                    override fun step() = Duration.ofMillis(statsd.getLong("step")) ?: super.step()
+                    override fun protocol(): StatsdProtocol {
+                        val protocol = statsd.getString("protocol") ?: return StatsdProtocol.UDP
+                        return try {
+                            StatsdProtocol.valueOf(protocol.uppercase())
+                        } catch (e: Exception) {
+                            StatsdProtocol.UDP
+                        }
+                    }
+
                     override fun pollingFrequency() = Duration.ofMillis(statsd.getLong("step")) ?: super.pollingFrequency()
                     override fun buffered() = statsd.getBoolean("buffered") ?: super.buffered()
                     override fun maxPacketLength() = statsd.getInteger("max-packet-length") ?: super.maxPacketLength()
+                    override fun publishUnchangedMeters() = statsd.getBoolean("publish-unchanged-meters") ?: super.publishUnchangedMeters()
                     override fun flavor(): StatsdFlavor {
                         val flavour = statsd.getString("flavour") ?: return StatsdFlavor.DATADOG
                         return try {
@@ -186,9 +223,9 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("elastic")?.let { elastic ->
                 val elasticRegistry = ElasticMeterRegistry(object : ElasticConfig {
                     override fun get(k: String) = null
+                    override fun step() = Duration.ofMillis(elastic.getLong("step")) ?: super.step()
                     override fun host() = elastic.getString("host") ?: super.host()
                     override fun index() = elastic.getString("index") ?: super.index()
-                    override fun step() = Duration.ofMillis(elastic.getLong("step")) ?: super.step()
                     override fun indexDateFormat() = elastic.getString("index-date-format") ?: super.indexDateFormat()
                     override fun indexDateSeparator() = elastic.getString("index-date-separator") ?: super.indexDateSeparator()
                     override fun autoCreateIndex() = elastic.getBoolean("auto-create-index") ?: super.autoCreateIndex()
@@ -196,6 +233,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun timestampFieldName() = elastic.getString("timestamp-field-name") ?: super.timestampFieldName()
                     override fun userName() = elastic.getString("user") ?: super.userName()
                     override fun password() = elastic.getString("password") ?: super.password()
+                    override fun apiKeyCredentials() = elastic.getString("token") ?: super.apiKeyCredentials()
                 }, Clock.SYSTEM)
                 registry.add(elasticRegistry)
             }
@@ -205,6 +243,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                 val prometheusRegistry = PrometheusMeterRegistry(object : PrometheusConfig {
                     override fun get(k: String) = null
                     override fun step() = Duration.ofMillis(prometheus.getLong("step")) ?: super.step()
+                    override fun descriptions() = prometheus.getBoolean("descriptions") ?: super.descriptions()
                     override fun histogramFlavor(): HistogramFlavor {
                         val flavour = prometheus.getString("histogram-flavour") ?: return HistogramFlavor.Prometheus
                         return try {
