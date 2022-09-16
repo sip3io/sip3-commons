@@ -22,6 +22,7 @@ import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig
 import io.micrometer.elastic.ElasticConfig
 import io.micrometer.elastic.ElasticMeterRegistry
+import io.micrometer.influx.InfluxApiVersion
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxConsistency
 import io.micrometer.influx.InfluxMeterRegistry
@@ -152,6 +153,14 @@ open class AbstractBootstrap : AbstractVerticle() {
                 val influxMeterRegistry = InfluxMeterRegistry(object : InfluxConfig {
                     override fun get(k: String) = null
                     override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
+                    override fun apiVersion(): InfluxApiVersion {
+                        val version = influxdb.getString("version") ?: return InfluxApiVersion.V2
+                        return try {
+                            InfluxApiVersion.valueOf(version.uppercase())
+                        } catch (e: Exception) {
+                            InfluxApiVersion.V2
+                        }
+                    }
                     override fun uri() = influxdb.getString("uri") ?: super.uri()
                     override fun db() = influxdb.getString("db") ?: super.db()
                     override fun retentionPolicy() = influxdb.getString("retention-policy") ?: super.retentionPolicy()
