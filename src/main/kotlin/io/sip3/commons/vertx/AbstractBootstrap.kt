@@ -153,14 +153,6 @@ open class AbstractBootstrap : AbstractVerticle() {
                 val influxMeterRegistry = InfluxMeterRegistry(object : InfluxConfig {
                     override fun get(k: String) = null
                     override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
-                    override fun apiVersion(): InfluxApiVersion {
-                        val version = influxdb.getString("version") ?: return InfluxApiVersion.V2
-                        return try {
-                            InfluxApiVersion.valueOf(version.uppercase())
-                        } catch (e: Exception) {
-                            InfluxApiVersion.V2
-                        }
-                    }
                     override fun uri() = influxdb.getString("uri") ?: super.uri()
                     override fun db() = influxdb.getString("db") ?: super.db()
                     override fun retentionPolicy() = influxdb.getString("retention-policy") ?: super.retentionPolicy()
@@ -172,6 +164,14 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun token() = influxdb.getString("token") ?: super.token()
                     override fun compressed() = influxdb.getBoolean("compressed") ?: super.compressed()
                     override fun autoCreateDb() = influxdb.getBoolean("auto-create-db") ?: super.autoCreateDb()
+                    override fun apiVersion(): InfluxApiVersion {
+                        val version = influxdb.getString("version") ?: return InfluxApiVersion.V1
+                        return try {
+                            InfluxApiVersion.valueOf(version.uppercase())
+                        } catch (e: Exception) {
+                            InfluxApiVersion.V1
+                        }
+                    }
                     override fun org() = influxdb.getString("org") ?: super.org()
                     override fun bucket() = influxdb.getString("bucket") ?: super.bucket()
                     override fun consistency(): InfluxConsistency {
