@@ -32,6 +32,7 @@ fun Vertx.registerLocalCodec() {
     })
 }
 
+@Deprecated("Use native Vertx method instead.")
 fun Vertx.setPeriodic(initialDelay: Long, period: Long, handler: () -> Unit) {
     require(initialDelay >= 0L) { "Cannot schedule a timer with initial delay < 0 ms" }
     require(period >= 1L) { "Cannot schedule a timer with period < 1 ms" }

@@ -145,7 +145,7 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         }
 
         fun period(period: Int) = apply {
-            if (period <= 1) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' delay must be greater than 1.")
+            if (period <= 1) throw IllegalArgumentException("'PeriodicallyExpiringHashMap' period must be greater than 1.")
             this.period = period
         }
 
