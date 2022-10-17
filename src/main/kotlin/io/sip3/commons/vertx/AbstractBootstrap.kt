@@ -260,11 +260,12 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     open suspend fun deployVerticles(config: JsonObject) {
         val packages = mutableListOf<String>().apply {
-            add("io.sip3")
-            config.getJsonObject("vertx")?.getString("base-package")?.let { basePackage ->
-                if (!basePackage.startsWith("io.sip3")) {
-                    add(basePackage)
-                }
+            config.getJsonObject("vertx")?.getJsonArray("base-packages")?.forEach { basePackage ->
+                add(basePackage as String)
+            }
+
+            if (isEmpty()) {
+                add("io.sip3")
             }
         }
 
