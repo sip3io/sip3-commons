@@ -103,7 +103,7 @@ open class AbstractBootstrap : AbstractVerticle() {
         }
     }
 
-    private fun configRetrieverOptions(): ConfigRetrieverOptions {
+    open fun configRetrieverOptions(): ConfigRetrieverOptions {
         val configStoreOptions = mutableListOf<ConfigStoreOptions>()
         configStoreOptions.apply {
             var options = configStoreOptionsOf(
