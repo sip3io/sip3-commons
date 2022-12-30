@@ -11,7 +11,7 @@
     <parent>
         <groupId>io.sip3</groupId>
         <artifactId>sip3-parent</artifactId>
-        <version>2022.2.2-SNAPSHOT</version>
+        <version>2023.1.1-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -69,6 +69,12 @@
             <artifactId>reflections</artifactId>
         </dependency>
 
+        <!-- Swagger -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>io.github.microutils</groupId>
@@ -93,7 +99,6 @@
             <artifactId>vertx-web</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Test -->
         <dependency>
             <groupId>io.mockk</groupId>
             <artifactId>mockk</artifactId>
