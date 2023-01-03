@@ -16,6 +16,9 @@
 
 package io.sip3.commons.domain
 
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "Attribute")
 class Attribute {
 
     companion object {
@@ -25,7 +28,25 @@ class Attribute {
         const val TYPE_BOOLEAN = "boolean"
     }
 
+    @Schema(
+        required = true,
+        title = "Name",
+        example = "sip.caller"
+    )
     lateinit var name: String
+
+    @Schema(
+        required = true,
+        title = "Type",
+        allowableValues = [TYPE_STRING, TYPE_NUMBER, TYPE_BOOLEAN],
+        example = TYPE_STRING
+    )
     lateinit var type: String
+
+    @Schema(
+        required = false,
+        title = "Options",
+        example = "[\"1001\",\"1002\"]"
+    )
     var options: MutableSet<String>? = null
 }

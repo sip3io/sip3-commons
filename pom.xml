@@ -69,6 +69,12 @@
             <artifactId>reflections</artifactId>
         </dependency>
 
+        <!-- Swagger -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>io.github.microutils</groupId>
@@ -93,7 +99,6 @@
             <artifactId>vertx-web</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Test -->
         <dependency>
             <groupId>io.mockk</groupId>
             <artifactId>mockk</artifactId>
