@@ -43,6 +43,7 @@ import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
 import io.vertx.core.AbstractVerticle
+import io.vertx.core.Future
 import io.vertx.core.Verticle
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.pointer.JsonPointer
@@ -66,6 +67,8 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     open val configLocations = listOf("config.location")
 
+    open var scanPeriod = 5000L
+
     override fun start() {
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
         // Define `local` codec to avoid serialization costs within the application.
@@ -82,48 +85,109 @@ open class AbstractBootstrap : AbstractVerticle() {
             }
         }
 
-        val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions())
-        configRetriever.getConfig { asr ->
-            if (asr.failed()) {
-                logger.error("ConfigRetriever 'getConfig()' failed.", asr.cause())
+        configRetrieverOptions()
+            .onFailure { t ->
+                logger.error(t) { "AbstractBootstrap 'configRetrieverOptions()' failed." }
                 vertx.closeAndExitProcess()
-            } else {
-                val config = asr.result().mergeIn(config())
-                logger.info("Configuration:\n ${config.encodePrettily()}")
-                deployMeterRegistries(config)
-                GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
-                    deployVerticles(config)
+            }
+            .onSuccess { configRetrieverOptions ->
+                val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
+                configRetriever.config
+                    .map { it.mergeIn(config()) }
+                    .onFailure { t ->
+                        logger.error(t) { "ConfigRetriever 'getConfig()' failed." }
+                        vertx.closeAndExitProcess()
+                    }
+                    .onSuccess { config ->
+                        logger.info("Configuration:\n ${config.encodePrettily()}")
+                        deployMeterRegistries(config)
+                        GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
+                            deployVerticles(config)
+                        }
+                    }
+
+                configRetriever.listen { change ->
+                    val config = change.newConfiguration
+                    logger.info("Configuration changed:\n ${config.encodePrettily()}")
+                    vertx.eventBus().localPublish(Routes.config_change, config)
                 }
             }
-        }
-        configRetriever.listen { change ->
-            val config = change.newConfiguration
-            logger.info("Configuration changed:\n ${config.encodePrettily()}")
-            vertx.eventBus().localPublish(Routes.config_change, config)
-        }
     }
 
-    open fun configRetrieverOptions(): ConfigRetrieverOptions {
-        val configStoreOptions = mutableListOf<ConfigStoreOptions>()
-        configStoreOptions.apply {
-            var options = configStoreOptionsOf(
-                optional = true,
-                type = "file",
-                format = "yaml",
-                config = JsonObject().put("path", "application.yml")
-            )
-            add(options)
-            configLocations.mapNotNull { System.getProperty(it) }.forEach { path ->
-                options = configStoreOptionsOf(
+    open fun configRetrieverOptions(): Future<ConfigRetrieverOptions> {
+        val type = System.getProperty("config.type") ?: "local"
+        return getConfigStores(type).map { stores ->
+            val configStoreOptions = mutableListOf<ConfigStoreOptions>().apply {
+                // Add default config from classpath
+                val options = configStoreOptionsOf(
                     optional = true,
                     type = "file",
                     format = "yaml",
-                    config = JsonObject().put("path", path)
+                    config = JsonObject().put("path", "application.yml")
                 )
                 add(options)
+
+                // Add main config stores
+                addAll(stores)
             }
+
+            return@map configRetrieverOptionsOf(
+                stores = configStoreOptions,
+                scanPeriod = scanPeriod
+            )
         }
-        return configRetrieverOptionsOf(stores = configStoreOptions)
+    }
+
+    open fun getConfigStores(type: String): Future<List<ConfigStoreOptions>> {
+         return when (type) {
+             "local" -> configLocations.mapNotNull { System.getProperty(it) }
+                 .map { path ->
+                     configStoreOptionsOf(
+                         optional = true,
+                         type = "file",
+                         format = "yaml",
+                         config = JsonObject().put("path", path)
+                     )
+                 }.let { Future.succeededFuture(it) }
+             else -> {
+                 val configStoreOptions = configStoreOptionsOf(
+                     type = "file",
+                     format = "yaml",
+                     config = JsonObject().put("path", System.getProperty("config.location"))
+                 )
+                 val configRetrieverOptions = configRetrieverOptionsOf(stores = listOf(configStoreOptions))
+                 val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
+
+                 return configRetriever.config
+                     .map { it.getJsonObject("config") ?: throw IllegalArgumentException("config") }
+                     .map { config ->
+                         config.getLong("scan-period")?.let {
+                             scanPeriod = it
+                         }
+
+                         // Add Custom config store
+                         val stores = mutableListOf(
+                             configStoreOptionsOf(
+                                 optional = false,
+                                 type = type,
+                                 format = config?.getString("format") ?: "json",
+                                 config = config
+                             )
+                         )
+
+                         // Add System properties config store if configured
+                         config.getJsonObject("sys")?.let { sys ->
+                             stores.add(configStoreOptionsOf(
+                                 optional = true,
+                                 type = "sys",
+                                 config = sys
+                             ))
+                         }
+
+                         return@map stores
+                     }
+             }
+        }
     }
 
     open fun deployMeterRegistries(config: JsonObject) {

@@ -115,6 +115,38 @@ class AbstractBootstrapTest : VertxTest() {
     }
 
     @Test
+    fun `Fetch config from JsonConfigStore`() {
+        System.setProperty("config.type", "json")
+        System.setProperty("config.location", "src/test/resources/application-test.yml")
+        runTest(
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject())
+            },
+            execute = {
+                // Do nothing...
+            },
+            assert = {
+                vertx.setPeriodic(100) {
+                    val endpoints = vertx.eventBus().endpoints()
+                    if (endpoints.size >= 3) {
+                        context.verify {
+                            assertTrue(endpoints.contains("B"))
+                            assertTrue(endpoints.contains("D"))
+                            assertTrue(endpoints.contains("E"))
+                        }
+                        context.completeNow()
+                    }
+                }
+            },
+            cleanup = {
+                removeRegistries()
+                System.clearProperty("config.type")
+                System.clearProperty("config.location")
+            }
+        )
+    }
+
+    @Test
     fun `Retrieve InfluxDB counters`() {
         val port = findRandomPort()
         runTest(
