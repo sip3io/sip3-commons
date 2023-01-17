@@ -50,16 +50,16 @@ object MongoClient {
                 ssl.getBoolean("enabled")?.let {
                     put("ssl", it)
                 }
-                ssl.getString("ca-path")?.let {
+                ssl.getString("ca_path")?.let {
                     put("caPath", it)
                 }
-                ssl.getString("cert-path")?.let {
+                ssl.getString("cert_path")?.let {
                     put("certPath", it)
                 }
-                ssl.getString("key-path")?.let {
+                ssl.getString("key_path")?.let {
                     put("keyPath", it)
                 }
-                ssl.getBoolean("trust-all")?.let {
+                ssl.getBoolean("trust_all")?.let {
                     put("trustAll", it)
                 }
             }

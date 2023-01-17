@@ -161,7 +161,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                  return configRetriever.config
                      .map { it.getJsonObject("config") ?: throw IllegalArgumentException("config") }
                      .map { config ->
-                         config.getLong("scan-period")?.let {
+                         config.getLong("scan_period")?.let {
                              scanPeriod = it
                          }
 
@@ -219,15 +219,15 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun uri() = influxdb.getString("uri") ?: super.uri()
                     override fun db() = influxdb.getString("db") ?: super.db()
-                    override fun retentionPolicy() = influxdb.getString("retention-policy") ?: super.retentionPolicy()
-                    override fun retentionDuration() = influxdb.getString("retention-duration") ?: super.retentionDuration()
-                    override fun retentionShardDuration() = influxdb.getString("retention-shard-duration") ?: super.retentionShardDuration()
-                    override fun retentionReplicationFactor() = influxdb.getInteger("retention-replication-factor") ?: super.retentionReplicationFactor()
+                    override fun retentionPolicy() = influxdb.getString("retention_policy") ?: super.retentionPolicy()
+                    override fun retentionDuration() = influxdb.getString("retention_duration") ?: super.retentionDuration()
+                    override fun retentionShardDuration() = influxdb.getString("retention_shard_duration") ?: super.retentionShardDuration()
+                    override fun retentionReplicationFactor() = influxdb.getInteger("retention_replication_factor") ?: super.retentionReplicationFactor()
                     override fun userName() = influxdb.getString("username") ?: super.userName()
                     override fun password() = influxdb.getString("password") ?: super.password()
                     override fun token() = influxdb.getString("token") ?: super.token()
                     override fun compressed() = influxdb.getBoolean("compressed") ?: super.compressed()
-                    override fun autoCreateDb() = influxdb.getBoolean("auto-create-db") ?: super.autoCreateDb()
+                    override fun autoCreateDb() = influxdb.getBoolean("auto_create_db") ?: super.autoCreateDb()
                     override fun apiVersion(): InfluxApiVersion {
                         val version = influxdb.getString("version") ?: return InfluxApiVersion.V1
                         return try {
@@ -269,8 +269,8 @@ open class AbstractBootstrap : AbstractVerticle() {
 
                     override fun pollingFrequency() = Duration.ofMillis(statsd.getLong("step")) ?: super.pollingFrequency()
                     override fun buffered() = statsd.getBoolean("buffered") ?: super.buffered()
-                    override fun maxPacketLength() = statsd.getInteger("max-packet-length") ?: super.maxPacketLength()
-                    override fun publishUnchangedMeters() = statsd.getBoolean("publish-unchanged-meters") ?: super.publishUnchangedMeters()
+                    override fun maxPacketLength() = statsd.getInteger("max_packet_length") ?: super.maxPacketLength()
+                    override fun publishUnchangedMeters() = statsd.getBoolean("publish_unchanged_meters") ?: super.publishUnchangedMeters()
                     override fun flavor(): StatsdFlavor {
                         val flavour = statsd.getString("flavour") ?: return StatsdFlavor.DATADOG
                         return try {
@@ -290,11 +290,11 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = Duration.ofMillis(elastic.getLong("step")) ?: super.step()
                     override fun host() = elastic.getString("host") ?: super.host()
                     override fun index() = elastic.getString("index") ?: super.index()
-                    override fun indexDateFormat() = elastic.getString("index-date-format") ?: super.indexDateFormat()
-                    override fun indexDateSeparator() = elastic.getString("index-date-separator") ?: super.indexDateSeparator()
-                    override fun autoCreateIndex() = elastic.getBoolean("auto-create-index") ?: super.autoCreateIndex()
+                    override fun indexDateFormat() = elastic.getString("index_date_format") ?: super.indexDateFormat()
+                    override fun indexDateSeparator() = elastic.getString("index_date_separator") ?: super.indexDateSeparator()
+                    override fun autoCreateIndex() = elastic.getBoolean("auto_create_index") ?: super.autoCreateIndex()
                     override fun pipeline() = elastic.getString("pipeline") ?: super.pipeline()
-                    override fun timestampFieldName() = elastic.getString("timestamp-field-name") ?: super.timestampFieldName()
+                    override fun timestampFieldName() = elastic.getString("timestamp_field_name") ?: super.timestampFieldName()
                     override fun userName() = elastic.getString("user") ?: super.userName()
                     override fun password() = elastic.getString("password") ?: super.password()
                     override fun apiKeyCredentials() = elastic.getString("token") ?: super.apiKeyCredentials()
@@ -309,7 +309,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = Duration.ofMillis(prometheus.getLong("step")) ?: super.step()
                     override fun descriptions() = prometheus.getBoolean("descriptions") ?: super.descriptions()
                     override fun histogramFlavor(): HistogramFlavor {
-                        val flavour = prometheus.getString("histogram-flavour") ?: return HistogramFlavor.Prometheus
+                        val flavour = prometheus.getString("histogram_flavour") ?: return HistogramFlavor.Prometheus
                         return try {
                             HistogramFlavor.valueOf(flavour)
                         } catch (e: Exception) {
@@ -324,7 +324,7 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     open suspend fun deployVerticles(config: JsonObject) {
         val packages = mutableListOf<String>().apply {
-            config.getJsonObject("vertx")?.getJsonArray("base-packages")?.forEach { basePackage ->
+            config.getJsonObject("vertx")?.getJsonArray("base_packages")?.forEach { basePackage ->
                 add(basePackage as String)
             }
 
