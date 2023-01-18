@@ -21,10 +21,12 @@ import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
 import io.sip3.commons.vertx.test.VertxTest
 import io.sip3.commons.vertx.util.endpoints
+import io.sip3.commons.vertx.util.localSend
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.datagram.DatagramSocketOptions
 import io.vertx.core.http.RequestOptions
 import io.vertx.core.json.JsonObject
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -79,6 +81,15 @@ class AbstractBootstrapTest : VertxTest() {
 
         override fun start() {
             vertx.eventBus().localConsumer<Any>("F") {}
+        }
+    }
+
+    @Instance
+    @ConditionalOnProperty(pointer = "/G")
+    open class G : AbstractVerticle() {
+
+        override fun start() {
+            vertx.eventBus().localSend("test_check_config", config())
         }
     }
 
@@ -142,6 +153,37 @@ class AbstractBootstrapTest : VertxTest() {
                 removeRegistries()
                 System.clearProperty("config.type")
                 System.clearProperty("config.location")
+            }
+        )
+    }
+
+    @Test
+    fun `Check backward compatibility for kebab-case in config`() {
+        runTest(
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("G", JsonObject().apply {
+                        put("key-1", "value-1")
+                        put("key_2", "value_2")
+                    })
+                })
+            },
+            execute = {
+                // Do nothing...
+            },
+            assert = {
+                vertx.eventBus().localConsumer<JsonObject>("test_check_config") { event ->
+                    val config = event.body()
+                    context.verify {
+                        assertTrue(config.containsKey("G"))
+                        config.getJsonObject("G").apply {
+                            assertEquals(2, size())
+                            assertEquals("value-1", getString("key-1"))
+                            assertEquals("value_2", getString("key_2"))
+                        }
+                    }
+                    context.completeNow()
+                }
             }
         )
     }
