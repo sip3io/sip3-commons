@@ -39,6 +39,7 @@ import io.sip3.commons.vertx.annotations.Instance
 import io.sip3.commons.vertx.util.closeAndExitProcess
 import io.sip3.commons.vertx.util.localPublish
 import io.sip3.commons.vertx.util.registerLocalCodec
+import io.sip3.commons.vertx.util.toSnakeCase
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
@@ -93,6 +94,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             .onSuccess { configRetrieverOptions ->
                 val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
                 configRetriever.config
+                    .map { it.toSnakeCase() }
                     .map { it.mergeIn(config()) }
                     .onFailure { t ->
                         logger.error(t) { "ConfigRetriever 'getConfig()' failed." }
@@ -107,7 +109,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     }
 
                 configRetriever.listen { change ->
-                    val config = change.newConfiguration
+                    val config = change.newConfiguration.toSnakeCase()
                     logger.info("Configuration changed:\n ${config.encodePrettily()}")
                     vertx.eventBus().localPublish(Routes.config_change, config)
                 }
