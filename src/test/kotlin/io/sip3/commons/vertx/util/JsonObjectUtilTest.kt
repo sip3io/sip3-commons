@@ -23,10 +23,8 @@ import org.junit.jupiter.api.Test
 
 class JsonObjectUtilTest : VertxTest() {
 
-    @Test
-    fun `Check 'toSnakeCase()' method`() {
-        val jsonObject = JsonObject(
-            """
+    private val JSON_OBJECT = JsonObject(
+        """
                 {
                   "z-1": true,
                   "z_2": "string",
@@ -43,15 +41,15 @@ class JsonObjectUtilTest : VertxTest() {
                   },
                   "c-1": {
                     "c_1_1": [
-                      {"c-1-1-1": "some-value_1"},
-                      {"c-1-1-2": "some-value_2"},
                       {
-                        "c-1-1-3": "some-value_3",
-                        "c-1-1-4": {
-                          "c-1-1-4_1": 1,
-                          "c-1-1-4_2": "2"
+                        "c_1_1_1": "some-value_1",
+                        "c_1_1_2": {
+                          "c-1-1-2_1": 1,
+                          "c-1-1-2_2": "2"
                         }
-                      }
+                      },
+                      {"c_1_1_3": "some-value_3"},
+                      {"c_1_1_4": "some-value_4"}
                     ]
                   },
                   "d-1": {
@@ -59,13 +57,37 @@ class JsonObjectUtilTest : VertxTest() {
                     "d-1_1": "value2",
                     "d_1-1": "value3",
                     "d_1_1": "value4"
+                  },
+                  "e_1": {
+                    "e_1_1_1": [
+                      { 
+                        "e_1_1_1": {
+                          "e_1_1_1_1": "value"
+                         }
+                      },
+                      {"e_1_1_2": "some-value_2"}
+                    ]
                   }
                 }
             """.trimIndent()
-        )
+    )
 
-        val inSnakeCase = jsonObject.toSnakeCase()
-        assertEquals(7, inSnakeCase.fieldNames().size)
+    @Test
+    fun `Check 'containsKebabCase()' method`() {
+        assertTrue(JSON_OBJECT.containsKebabCase())
+        assertTrue(JSON_OBJECT.getJsonObject("a_1").containsKebabCase())
+        assertTrue(JSON_OBJECT.getJsonObject("b-1").containsKebabCase())
+        assertTrue(JSON_OBJECT.getJsonObject("c-1").containsKebabCase())
+        assertTrue(JSON_OBJECT.getJsonObject("d-1").containsKebabCase())
+
+        assertFalse(JSON_OBJECT.getJsonObject("a_1").getJsonObject("a-1-1").containsKebabCase())
+        assertFalse(JSON_OBJECT.getJsonObject("e_1").containsKebabCase())
+    }
+
+    @Test
+    fun `Check 'toSnakeCase()' method`() {
+        val inSnakeCase = JSON_OBJECT.toSnakeCase()
+        assertEquals(8, inSnakeCase.fieldNames().size)
 
         assertEquals(true, inSnakeCase.getBoolean("z_1"))
         assertEquals("string", inSnakeCase.getString("z_2"))
@@ -77,12 +99,13 @@ class JsonObjectUtilTest : VertxTest() {
 
         assertEquals(1, inSnakeCase.getJsonObject("c_1")
             .getJsonArray("c_1_1")
-            .getJsonObject(2)
-            .getJsonObject("c_1_1_4")
-            .getInteger("c_1_1_4_1")
+            .getJsonObject(0)
+            .getJsonObject("c_1_1_2")
+            .getInteger("c_1_1_2_1")
         )
 
         assertEquals(1, inSnakeCase.getJsonObject("d_1").fieldNames().size)
         assertEquals("value4", inSnakeCase.getJsonObject("d_1").getString("d_1_1"))
+        assertEquals(JSON_OBJECT.getJsonObject("e_1"), inSnakeCase.getJsonObject("e_1"))
     }
 }

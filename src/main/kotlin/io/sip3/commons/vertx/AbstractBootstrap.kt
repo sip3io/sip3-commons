@@ -36,10 +36,7 @@ import io.micrometer.statsd.StatsdProtocol
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
-import io.sip3.commons.vertx.util.closeAndExitProcess
-import io.sip3.commons.vertx.util.localPublish
-import io.sip3.commons.vertx.util.registerLocalCodec
-import io.sip3.commons.vertx.util.toSnakeCase
+import io.sip3.commons.vertx.util.*
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
@@ -94,7 +91,14 @@ open class AbstractBootstrap : AbstractVerticle() {
             .onSuccess { configRetrieverOptions ->
                 val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
                 configRetriever.config
-                    .map { it.toSnakeCase() }
+                    .map { config ->
+                        if (!config.containsKebabCase()) {
+                            return@map config
+                        }
+
+                        logger.warn { "Config contains keys in `kebab-case`." }
+                        return@map config.toSnakeCase()
+                    }
                     .map { it.mergeIn(config()) }
                     .onFailure { t ->
                         logger.error(t) { "ConfigRetriever 'getConfig()' failed." }

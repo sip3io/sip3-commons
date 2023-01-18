@@ -19,6 +19,31 @@ package io.sip3.commons.vertx.util
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 
+fun JsonObject.containsKebabCase(): Boolean {
+    forEach { (k, v) ->
+        if (k.contains("-")) {
+            return true
+        }
+
+        when (v) {
+            is JsonObject -> if (v.containsKebabCase()) return true
+            is JsonArray -> if (v.containsKebabCase()) return true
+        }
+    }
+    return false
+}
+
+private fun JsonArray.containsKebabCase(): Boolean {
+    forEach { v ->
+        when(v) {
+            is JsonObject -> return v.containsKebabCase()
+            is JsonArray -> return v.containsKebabCase()
+        }
+    }
+
+    return false
+}
+
 fun JsonObject.toSnakeCase(): JsonObject {
     return JsonObject().apply {
 
