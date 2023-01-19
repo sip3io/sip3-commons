@@ -1,0 +1,5 @@
+config:
+  D:
+    D: true
+  E: true
+  F: true

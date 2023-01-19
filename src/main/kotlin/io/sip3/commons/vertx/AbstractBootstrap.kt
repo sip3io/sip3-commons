@@ -36,13 +36,12 @@ import io.micrometer.statsd.StatsdProtocol
 import io.sip3.commons.Routes
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
-import io.sip3.commons.vertx.util.closeAndExitProcess
-import io.sip3.commons.vertx.util.localPublish
-import io.sip3.commons.vertx.util.registerLocalCodec
+import io.sip3.commons.vertx.util.*
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
 import io.vertx.core.AbstractVerticle
+import io.vertx.core.Future
 import io.vertx.core.Verticle
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.pointer.JsonPointer
@@ -66,6 +65,8 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     open val configLocations = listOf("config.location")
 
+    open var scanPeriod = 5000L
+
     override fun start() {
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
         // Define `local` codec to avoid serialization costs within the application.
@@ -82,48 +83,117 @@ open class AbstractBootstrap : AbstractVerticle() {
             }
         }
 
-        val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions())
-        configRetriever.getConfig { asr ->
-            if (asr.failed()) {
-                logger.error("ConfigRetriever 'getConfig()' failed.", asr.cause())
+        configRetrieverOptions()
+            .onFailure { t ->
+                logger.error(t) { "AbstractBootstrap 'configRetrieverOptions()' failed." }
                 vertx.closeAndExitProcess()
-            } else {
-                val config = asr.result().mergeIn(config())
-                logger.info("Configuration:\n ${config.encodePrettily()}")
-                deployMeterRegistries(config)
-                GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
-                    deployVerticles(config)
+            }
+            .onSuccess { configRetrieverOptions ->
+                val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
+                configRetriever.config
+                    .map { config ->
+                        if (!config.containsKebabCase()) {
+                            return@map config
+                        }
+
+                        logger.warn { "Config contains keys in `kebab-case`." }
+                        return@map config.toSnakeCase()
+                    }
+                    .map { it.mergeIn(config()) }
+                    .onFailure { t ->
+                        logger.error(t) { "ConfigRetriever 'getConfig()' failed." }
+                        vertx.closeAndExitProcess()
+                    }
+                    .onSuccess { config ->
+                        logger.info("Configuration:\n ${config.encodePrettily()}")
+                        deployMeterRegistries(config)
+                        GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
+                            deployVerticles(config)
+                        }
+                    }
+
+                configRetriever.listen { change ->
+                    val config = change.newConfiguration.toSnakeCase()
+                    logger.info("Configuration changed:\n ${config.encodePrettily()}")
+                    vertx.eventBus().localPublish(Routes.config_change, config)
                 }
             }
-        }
-        configRetriever.listen { change ->
-            val config = change.newConfiguration
-            logger.info("Configuration changed:\n ${config.encodePrettily()}")
-            vertx.eventBus().localPublish(Routes.config_change, config)
-        }
     }
 
-    open fun configRetrieverOptions(): ConfigRetrieverOptions {
-        val configStoreOptions = mutableListOf<ConfigStoreOptions>()
-        configStoreOptions.apply {
-            var options = configStoreOptionsOf(
-                optional = true,
-                type = "file",
-                format = "yaml",
-                config = JsonObject().put("path", "application.yml")
-            )
-            add(options)
-            configLocations.mapNotNull { System.getProperty(it) }.forEach { path ->
-                options = configStoreOptionsOf(
+    open fun configRetrieverOptions(): Future<ConfigRetrieverOptions> {
+        val type = System.getProperty("config.type") ?: "local"
+        return getConfigStores(type).map { stores ->
+            val configStoreOptions = mutableListOf<ConfigStoreOptions>().apply {
+                // Add default config from classpath
+                val options = configStoreOptionsOf(
                     optional = true,
                     type = "file",
                     format = "yaml",
-                    config = JsonObject().put("path", path)
+                    config = JsonObject().put("path", "application.yml")
                 )
                 add(options)
+
+                // Add main config stores
+                addAll(stores)
             }
+
+            return@map configRetrieverOptionsOf(
+                stores = configStoreOptions,
+                scanPeriod = scanPeriod
+            )
         }
-        return configRetrieverOptionsOf(stores = configStoreOptions)
+    }
+
+    open fun getConfigStores(type: String): Future<List<ConfigStoreOptions>> {
+         return when (type) {
+             "local" -> configLocations.mapNotNull { System.getProperty(it) }
+                 .map { path ->
+                     configStoreOptionsOf(
+                         optional = true,
+                         type = "file",
+                         format = "yaml",
+                         config = JsonObject().put("path", path)
+                     )
+                 }.let { Future.succeededFuture(it) }
+             else -> {
+                 val configStoreOptions = configStoreOptionsOf(
+                     type = "file",
+                     format = "yaml",
+                     config = JsonObject().put("path", System.getProperty("config.location"))
+                 )
+                 val configRetrieverOptions = configRetrieverOptionsOf(stores = listOf(configStoreOptions))
+                 val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
+
+                 return configRetriever.config
+                     .map { it.getJsonObject("config") ?: throw IllegalArgumentException("config") }
+                     .map { config ->
+                         config.getLong("scan_period")?.let {
+                             scanPeriod = it
+                         }
+
+                         // Add Custom config store
+                         val stores = mutableListOf(
+                             configStoreOptionsOf(
+                                 optional = false,
+                                 type = type,
+                                 format = config?.getString("format") ?: "json",
+                                 config = config
+                             )
+                         )
+
+                         // Add System properties config store if configured
+                         config.getJsonObject("sys")?.let { sys ->
+                             stores.add(configStoreOptionsOf(
+                                 optional = true,
+                                 type = "sys",
+                                 config = sys
+                             ))
+                         }
+
+                         return@map stores
+                     }
+             }
+        }
     }
 
     open fun deployMeterRegistries(config: JsonObject) {
@@ -155,15 +225,15 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = influxdb.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun uri() = influxdb.getString("uri") ?: super.uri()
                     override fun db() = influxdb.getString("db") ?: super.db()
-                    override fun retentionPolicy() = influxdb.getString("retention-policy") ?: super.retentionPolicy()
-                    override fun retentionDuration() = influxdb.getString("retention-duration") ?: super.retentionDuration()
-                    override fun retentionShardDuration() = influxdb.getString("retention-shard-duration") ?: super.retentionShardDuration()
-                    override fun retentionReplicationFactor() = influxdb.getInteger("retention-replication-factor") ?: super.retentionReplicationFactor()
+                    override fun retentionPolicy() = influxdb.getString("retention_policy") ?: super.retentionPolicy()
+                    override fun retentionDuration() = influxdb.getString("retention_duration") ?: super.retentionDuration()
+                    override fun retentionShardDuration() = influxdb.getString("retention_shard_duration") ?: super.retentionShardDuration()
+                    override fun retentionReplicationFactor() = influxdb.getInteger("retention_replication_factor") ?: super.retentionReplicationFactor()
                     override fun userName() = influxdb.getString("username") ?: super.userName()
                     override fun password() = influxdb.getString("password") ?: super.password()
                     override fun token() = influxdb.getString("token") ?: super.token()
                     override fun compressed() = influxdb.getBoolean("compressed") ?: super.compressed()
-                    override fun autoCreateDb() = influxdb.getBoolean("auto-create-db") ?: super.autoCreateDb()
+                    override fun autoCreateDb() = influxdb.getBoolean("auto_create_db") ?: super.autoCreateDb()
                     override fun apiVersion(): InfluxApiVersion {
                         val version = influxdb.getString("version") ?: return InfluxApiVersion.V1
                         return try {
@@ -205,8 +275,8 @@ open class AbstractBootstrap : AbstractVerticle() {
 
                     override fun pollingFrequency() = Duration.ofMillis(statsd.getLong("step")) ?: super.pollingFrequency()
                     override fun buffered() = statsd.getBoolean("buffered") ?: super.buffered()
-                    override fun maxPacketLength() = statsd.getInteger("max-packet-length") ?: super.maxPacketLength()
-                    override fun publishUnchangedMeters() = statsd.getBoolean("publish-unchanged-meters") ?: super.publishUnchangedMeters()
+                    override fun maxPacketLength() = statsd.getInteger("max_packet_length") ?: super.maxPacketLength()
+                    override fun publishUnchangedMeters() = statsd.getBoolean("publish_unchanged_meters") ?: super.publishUnchangedMeters()
                     override fun flavor(): StatsdFlavor {
                         val flavour = statsd.getString("flavour") ?: return StatsdFlavor.DATADOG
                         return try {
@@ -226,11 +296,11 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = Duration.ofMillis(elastic.getLong("step")) ?: super.step()
                     override fun host() = elastic.getString("host") ?: super.host()
                     override fun index() = elastic.getString("index") ?: super.index()
-                    override fun indexDateFormat() = elastic.getString("index-date-format") ?: super.indexDateFormat()
-                    override fun indexDateSeparator() = elastic.getString("index-date-separator") ?: super.indexDateSeparator()
-                    override fun autoCreateIndex() = elastic.getBoolean("auto-create-index") ?: super.autoCreateIndex()
+                    override fun indexDateFormat() = elastic.getString("index_date_format") ?: super.indexDateFormat()
+                    override fun indexDateSeparator() = elastic.getString("index_date_separator") ?: super.indexDateSeparator()
+                    override fun autoCreateIndex() = elastic.getBoolean("auto_create_index") ?: super.autoCreateIndex()
                     override fun pipeline() = elastic.getString("pipeline") ?: super.pipeline()
-                    override fun timestampFieldName() = elastic.getString("timestamp-field-name") ?: super.timestampFieldName()
+                    override fun timestampFieldName() = elastic.getString("timestamp_field_name") ?: super.timestampFieldName()
                     override fun userName() = elastic.getString("user") ?: super.userName()
                     override fun password() = elastic.getString("password") ?: super.password()
                     override fun apiKeyCredentials() = elastic.getString("token") ?: super.apiKeyCredentials()
@@ -245,7 +315,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun step() = Duration.ofMillis(prometheus.getLong("step")) ?: super.step()
                     override fun descriptions() = prometheus.getBoolean("descriptions") ?: super.descriptions()
                     override fun histogramFlavor(): HistogramFlavor {
-                        val flavour = prometheus.getString("histogram-flavour") ?: return HistogramFlavor.Prometheus
+                        val flavour = prometheus.getString("histogram_flavour") ?: return HistogramFlavor.Prometheus
                         return try {
                             HistogramFlavor.valueOf(flavour)
                         } catch (e: Exception) {
@@ -260,7 +330,7 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     open suspend fun deployVerticles(config: JsonObject) {
         val packages = mutableListOf<String>().apply {
-            config.getJsonObject("vertx")?.getJsonArray("base-packages")?.forEach { basePackage ->
+            config.getJsonObject("vertx")?.getJsonArray("base_packages")?.forEach { basePackage ->
                 add(basePackage as String)
             }
 
