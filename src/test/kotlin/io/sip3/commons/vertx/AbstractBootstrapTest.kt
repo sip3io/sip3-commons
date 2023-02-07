@@ -313,6 +313,37 @@ class AbstractBootstrapTest : VertxTest() {
         )
     }
 
+    @Test
+    fun `Retrieve New Relic counters`() {
+        val port = findRandomPort()
+        runTest(
+            deploy = {
+                vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
+                    put("metrics", JsonObject().apply {
+                        put("new_relic", JsonObject().apply {
+                            put("uri", "http://127.0.0.1:$port")
+                            put("step", 1000)
+                            put("account_id", "test")
+                            put("api_key", "test")
+                        })
+                    })
+                })
+            },
+            execute = {
+                vertx.setPeriodic(100) { Metrics.counter("test").increment() }
+            },
+            assert = {
+                val server = vertx.createHttpServer()
+                server.requestHandler { request ->
+                    request.response().end("OK")
+                    context.completeNow()
+                }
+                server.listen(port)
+            },
+            cleanup = this::removeRegistries
+        )
+    }
+
     private fun removeRegistries() {
         Metrics.globalRegistry.registries.iterator().forEach { registry ->
             Metrics.removeRegistry(registry)
