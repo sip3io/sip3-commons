@@ -26,6 +26,8 @@ import io.micrometer.influx.InfluxApiVersion
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxConsistency
 import io.micrometer.influx.InfluxMeterRegistry
+import io.micrometer.newrelic.NewRelicConfig
+import io.micrometer.newrelic.NewRelicMeterRegistry
 import io.micrometer.prometheus.HistogramFlavor
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
@@ -77,6 +79,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     logger.error { "Shutting down the process due to OOM." }
                     vertx.closeAndExitProcess()
                 }
+
                 else -> {
                     logger.error(t) { "Got unhandled exception." }
                 }
@@ -145,54 +148,57 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open fun getConfigStores(type: String): Future<List<ConfigStoreOptions>> {
-         return when (type) {
-             "local" -> configLocations.mapNotNull { System.getProperty(it) }
-                 .map { path ->
-                     configStoreOptionsOf(
-                         optional = true,
-                         type = "file",
-                         format = "yaml",
-                         config = JsonObject().put("path", path)
-                     )
-                 }.let { Future.succeededFuture(it) }
-             else -> {
-                 val configStoreOptions = configStoreOptionsOf(
-                     type = "file",
-                     format = "yaml",
-                     config = JsonObject().put("path", System.getProperty("config.location"))
-                 )
-                 val configRetrieverOptions = configRetrieverOptionsOf(stores = listOf(configStoreOptions))
-                 val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
+        return when (type) {
+            "local" -> configLocations.mapNotNull { System.getProperty(it) }
+                .map { path ->
+                    configStoreOptionsOf(
+                        optional = true,
+                        type = "file",
+                        format = "yaml",
+                        config = JsonObject().put("path", path)
+                    )
+                }.let { Future.succeededFuture(it) }
 
-                 return configRetriever.config
-                     .map { it.getJsonObject("config") ?: throw IllegalArgumentException("config") }
-                     .map { config ->
-                         config.getLong("scan_period")?.let {
-                             scanPeriod = it
-                         }
+            else -> {
+                val configStoreOptions = configStoreOptionsOf(
+                    type = "file",
+                    format = "yaml",
+                    config = JsonObject().put("path", System.getProperty("config.location"))
+                )
+                val configRetrieverOptions = configRetrieverOptionsOf(stores = listOf(configStoreOptions))
+                val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
 
-                         // Add Custom config store
-                         val stores = mutableListOf(
-                             configStoreOptionsOf(
-                                 optional = false,
-                                 type = type,
-                                 format = config?.getString("format") ?: "json",
-                                 config = config
-                             )
-                         )
+                return configRetriever.config
+                    .map { it.getJsonObject("config") ?: throw IllegalArgumentException("config") }
+                    .map { config ->
+                        config.getLong("scan_period")?.let {
+                            scanPeriod = it
+                        }
 
-                         // Add System properties config store if configured
-                         config.getJsonObject("sys")?.let { sys ->
-                             stores.add(configStoreOptionsOf(
-                                 optional = true,
-                                 type = "sys",
-                                 config = sys
-                             ))
-                         }
+                        // Add Custom config store
+                        val stores = mutableListOf(
+                            configStoreOptionsOf(
+                                optional = false,
+                                type = type,
+                                format = config?.getString("format") ?: "json",
+                                config = config
+                            )
+                        )
 
-                         return@map stores
-                     }
-             }
+                        // Add System properties config store if configured
+                        config.getJsonObject("sys")?.let { sys ->
+                            stores.add(
+                                configStoreOptionsOf(
+                                    optional = true,
+                                    type = "sys",
+                                    config = sys
+                                )
+                            )
+                        }
+
+                        return@map stores
+                    }
+            }
         }
     }
 
@@ -242,6 +248,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                             InfluxApiVersion.V1
                         }
                     }
+
                     override fun org() = influxdb.getString("org") ?: super.org()
                     override fun bucket() = influxdb.getString("bucket") ?: super.bucket()
                     override fun consistency(): InfluxConsistency {
@@ -324,6 +331,18 @@ open class AbstractBootstrap : AbstractVerticle() {
                     }
                 })
                 registry.add(prometheusRegistry)
+            }
+
+            // New Relic
+            meters.getJsonObject("new_relic")?.let { newRelic ->
+                val newRelicRegistry = NewRelicMeterRegistry(object : NewRelicConfig {
+                    override fun get(k: String) = null
+                    override fun step() = Duration.ofMillis(newRelic.getLong("step")) ?: super.step()
+                    override fun uri() = newRelic.getString("uri") ?: super.uri()
+                    override fun accountId() = newRelic.getString("account_id") ?: super.accountId()
+                    override fun apiKey() = newRelic.getString("api_key") ?: super.apiKey()
+                }, Clock.SYSTEM)
+                registry.add(newRelicRegistry)
             }
         }
     }
