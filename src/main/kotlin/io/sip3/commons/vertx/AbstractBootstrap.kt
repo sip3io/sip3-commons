@@ -219,7 +219,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("logging")?.let { logging ->
                 val loggingMeterRegistry = LoggingMeterRegistry(object : LoggingRegistryConfig {
                     override fun get(k: String) = null
-                    override fun step() = Duration.ofMillis(logging.getLong("step"))
+                    override fun step() = logging.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                 }, Clock.SYSTEM)
                 registry.add(loggingMeterRegistry)
             }
@@ -267,7 +267,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("statsd")?.let { statsd ->
                 val statsdRegistry = StatsdMeterRegistry(object : StatsdConfig {
                     override fun get(k: String) = null
-                    override fun step() = Duration.ofMillis(statsd.getLong("step")) ?: super.step()
+                    override fun step() = statsd.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun enabled() = statsd.getBoolean("enabled") ?: super.enabled()
                     override fun host() = statsd.getString("host") ?: super.host()
                     override fun port() = statsd.getInteger("port") ?: super.port()
@@ -280,7 +280,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                         }
                     }
 
-                    override fun pollingFrequency() = Duration.ofMillis(statsd.getLong("step")) ?: super.pollingFrequency()
+                    override fun pollingFrequency() = statsd.getLong("step")?.let { Duration.ofMillis(it) } ?: super.pollingFrequency()
                     override fun buffered() = statsd.getBoolean("buffered") ?: super.buffered()
                     override fun maxPacketLength() = statsd.getInteger("max_packet_length") ?: super.maxPacketLength()
                     override fun publishUnchangedMeters() = statsd.getBoolean("publish_unchanged_meters") ?: super.publishUnchangedMeters()
@@ -300,7 +300,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("elastic")?.let { elastic ->
                 val elasticRegistry = ElasticMeterRegistry(object : ElasticConfig {
                     override fun get(k: String) = null
-                    override fun step() = Duration.ofMillis(elastic.getLong("step")) ?: super.step()
+                    override fun step() = elastic.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun host() = elastic.getString("host") ?: super.host()
                     override fun index() = elastic.getString("index") ?: super.index()
                     override fun indexDateFormat() = elastic.getString("index_date_format") ?: super.indexDateFormat()
@@ -319,7 +319,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("prometheus")?.let { prometheus ->
                 val prometheusRegistry = PrometheusMeterRegistry(object : PrometheusConfig {
                     override fun get(k: String) = null
-                    override fun step() = Duration.ofMillis(prometheus.getLong("step")) ?: super.step()
+                    override fun step() = prometheus.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun descriptions() = prometheus.getBoolean("descriptions") ?: super.descriptions()
                     override fun histogramFlavor(): HistogramFlavor {
                         val flavour = prometheus.getString("histogram_flavour") ?: return HistogramFlavor.Prometheus
@@ -337,7 +337,7 @@ open class AbstractBootstrap : AbstractVerticle() {
             meters.getJsonObject("new_relic")?.let { newRelic ->
                 val newRelicRegistry = NewRelicMeterRegistry(object : NewRelicConfig {
                     override fun get(k: String) = null
-                    override fun step() = Duration.ofMillis(newRelic.getLong("step")) ?: super.step()
+                    override fun step() = newRelic.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun uri() = newRelic.getString("uri") ?: super.uri()
                     override fun accountId() = newRelic.getString("account_id") ?: super.accountId()
                     override fun apiKey() = newRelic.getString("api_key") ?: super.apiKey()
