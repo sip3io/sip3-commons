@@ -65,9 +65,14 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     private val logger = KotlinLogging.logger {}
 
+    companion object {
+
+        const val DEFAULT_SCAN_PERIOD = 5000L
+    }
+
     open val configLocations = listOf("config.location")
 
-    open var scanPeriod = 5000L
+    open var scanPeriod = DEFAULT_SCAN_PERIOD
 
     override fun start() {
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
