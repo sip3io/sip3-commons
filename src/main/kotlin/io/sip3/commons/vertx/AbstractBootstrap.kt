@@ -153,35 +153,37 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open fun getConfigStores(type: String): Future<List<ConfigStoreOptions>> {
-        return when (type) {
-            "local" -> configLocations.mapNotNull { System.getProperty(it) }
-                .map { path ->
-                    configStoreOptionsOf(
-                        optional = true,
-                        type = "file",
-                        format = "yaml",
-                        config = JsonObject().put("path", path)
-                    )
-                }.let { Future.succeededFuture(it) }
+        val configStoreOptions = configStoreOptionsOf(
+            optional = true,
+            type = "file",
+            format = "yaml",
+            config = JsonObject().put("path", System.getProperty("config.location") ?: "application.yml")
+        )
+        val configRetrieverOptions = configRetrieverOptionsOf(stores = listOf(configStoreOptions))
+        val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
 
-            else -> {
-                val configStoreOptions = configStoreOptionsOf(
-                    type = "file",
-                    format = "yaml",
-                    config = JsonObject().put("path", System.getProperty("config.location"))
-                )
-                val configRetrieverOptions = configRetrieverOptionsOf(stores = listOf(configStoreOptions))
-                val configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions)
+        return configRetriever.config
+            .map { it.getJsonObject("config") }
+            .map { config ->
+                config?.getLong("scan_period")?.let {
+                    scanPeriod = it
+                }
 
-                return configRetriever.config
-                    .map { it.getJsonObject("config") ?: throw IllegalArgumentException("config") }
-                    .map { config ->
-                        config.getLong("scan_period")?.let {
-                            scanPeriod = it
-                        }
+                val stores = mutableListOf<ConfigStoreOptions>()
+                when (type) {
+                    "local" -> configLocations.mapNotNull { System.getProperty(it) }
+                        .map { path ->
+                            configStoreOptionsOf(
+                                optional = true,
+                                type = "file",
+                                format = "yaml",
+                                config = JsonObject().put("path", path)
+                            )
+                        }.let { stores.addAll(it) }
 
+                    else -> {
                         // Add Custom config store
-                        val stores = mutableListOf(
+                        stores.add(
                             configStoreOptionsOf(
                                 optional = false,
                                 type = type,
@@ -189,22 +191,22 @@ open class AbstractBootstrap : AbstractVerticle() {
                                 config = config
                             )
                         )
-
-                        // Add System properties config store if configured
-                        config.getJsonObject("sys")?.let { sys ->
-                            stores.add(
-                                configStoreOptionsOf(
-                                    optional = true,
-                                    type = "sys",
-                                    config = sys
-                                )
-                            )
-                        }
-
-                        return@map stores
                     }
+                }
+
+                // Add System properties config store if configured
+                config?.getJsonObject("sys")?.let { sys ->
+                    stores.add(
+                        configStoreOptionsOf(
+                            optional = true,
+                            type = "sys",
+                            config = sys
+                        )
+                    )
+                }
+
+                return@map stores
             }
-        }
     }
 
     open fun deployMeterRegistries(config: JsonObject) {
