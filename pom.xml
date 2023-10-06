@@ -14,6 +14,9 @@
         <version>2023.2.1-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
+    </properties>
     <dependencies>
         <!-- Vert.x -->
         <dependency>
@@ -103,6 +106,10 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
         </dependency>
         <dependency>
@@ -118,7 +125,7 @@
         </dependency>
         <dependency>
             <groupId>io.mockk</groupId>
-            <artifactId>mockk</artifactId>
+            <artifactId>mockk-jvm</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
