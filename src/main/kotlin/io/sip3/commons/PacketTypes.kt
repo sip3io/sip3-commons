@@ -41,4 +41,7 @@ object PacketTypes {
 
     // RTP Event (Internal SIP3 protocol)
     const val RTPE: Byte = 8
+
+    // DIAMETER
+    const val DIAMETER: Byte = 9
 }
