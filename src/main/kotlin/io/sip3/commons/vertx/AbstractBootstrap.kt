@@ -44,6 +44,7 @@ import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
+import io.vertx.core.ThreadingModel
 import io.vertx.core.Verticle
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.pointer.JsonPointer
@@ -394,9 +395,14 @@ open class AbstractBootstrap : AbstractVerticle() {
                 true -> 1
                 else -> config.getJsonObject("vertx")?.getInteger("instances") ?: 1
             }
-            val worker = instanceAnnotation.worker
 
-            val deploymentOptions = deploymentOptionsOf(config = config, instances = instances, worker = worker)
+            val threadingModel = when {
+                instanceAnnotation.worker -> ThreadingModel.WORKER
+                instanceAnnotation.virtual -> ThreadingModel.VIRTUAL_THREAD
+                else -> ThreadingModel.EVENT_LOOP
+            }
+
+            val deploymentOptions = deploymentOptionsOf(config = config, instances = instances, threadingModel = threadingModel)
             try {
                 vertx.deployVerticle(clazz, deploymentOptions).await()
             } catch (e: Exception) {
