@@ -32,27 +32,6 @@ fun Vertx.registerLocalCodec() {
     })
 }
 
-@Deprecated("Use native Vertx method instead.")
-fun Vertx.setPeriodic(initialDelay: Long, period: Long, handler: () -> Unit) {
-    require(initialDelay >= 0L) { "Cannot schedule a timer with initial delay < 0 ms" }
-    require(period >= 1L) { "Cannot schedule a timer with period < 1 ms" }
-
-    when (initialDelay) {
-        0L -> {
-            // Hack to keep execution within Vert.x context
-            setTimer(1) {
-                handler.invoke()
-            }
-            setPeriodic(period) { handler.invoke() }
-        }
-        else -> {
-            setTimer(initialDelay) {
-                setPeriodic(0, period, handler)
-            }
-        }
-    }
-}
-
 fun Vertx.closeAndExitProcess(code: Int = -1) {
     close { exitProcess(code) }
 }

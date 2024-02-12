@@ -17,8 +17,13 @@
 package io.sip3.commons.domain.payload
 
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
 
 interface Decodable : Payload {
 
     fun decode(buffer: ByteBuf)
+
+    fun decode(bytes: ByteArray) {
+        decode(Unpooled.wrappedBuffer(bytes))
+    }
 }
