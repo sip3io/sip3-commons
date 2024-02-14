@@ -24,7 +24,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.core.deploymentOptionsOf
-import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.coAwait
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -79,6 +79,6 @@ open class VertxTest {
             config = config,
             instances = instances
         )
-        deployVerticle(verticle.java.canonicalName, deploymentOptions).await()
+        deployVerticle(verticle.java.canonicalName, deploymentOptions).coAwait()
     }
 }

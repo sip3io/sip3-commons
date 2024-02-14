@@ -51,7 +51,7 @@ import io.vertx.core.json.pointer.JsonPointer
 import io.vertx.kotlin.config.configRetrieverOptionsOf
 import io.vertx.kotlin.config.configStoreOptionsOf
 import io.vertx.kotlin.core.deploymentOptionsOf
-import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.coAwait
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.micrometer.backends.BackendRegistries
 import kotlinx.coroutines.GlobalScope
@@ -404,7 +404,7 @@ open class AbstractBootstrap : AbstractVerticle() {
 
             val deploymentOptions = deploymentOptionsOf(config = config, instances = instances, threadingModel = threadingModel)
             try {
-                vertx.deployVerticle(clazz, deploymentOptions).await()
+                vertx.deployVerticle(clazz, deploymentOptions).coAwait()
             } catch (e: Exception) {
                 logger.error(e) { "Vertx 'deployVerticle()' failed. Verticle: $clazz" }
                 vertx.closeAndExitProcess()
