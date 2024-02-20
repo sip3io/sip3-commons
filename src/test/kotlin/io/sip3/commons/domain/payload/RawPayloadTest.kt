@@ -16,20 +16,15 @@
 
 package io.sip3.commons.domain.payload
 
-import io.sip3.commons.ProtocolCodes
-import io.sip3.commons.domain.media.Recording
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class RecordingPayloadTest {
+class RawPayloadTest {
 
     companion object {
 
-        val RECORDING = RecordingPayload().apply {
-            type = ProtocolCodes.RTP
-            mode = Recording.GDPR
-            callId = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@foo.bar.com"
+        val RAW = RawPayload().apply {
             payload = byteArrayOf(
                 0x80.toByte(), 0x08.toByte(), 0x01.toByte(), 0xdd.toByte(), 0x2b.toByte(), 0x76.toByte(), 0x37.toByte(),
                 0x40.toByte(), 0x95.toByte(), 0x06.toByte(), 0xb9.toByte(), 0x73.toByte()
@@ -39,18 +34,15 @@ class RecordingPayloadTest {
 
     @Test
     fun `Encode-decode validation`() {
-        val encoded = RECORDING.encode()
+        val encoded = RAW.encode()
         assertEquals(encoded.writerIndex(), encoded.capacity());
-        assertEquals(74, encoded.capacity());
+        assertEquals(15, encoded.capacity());
 
-        val decoded = RecordingPayload().apply {
+        val decoded = RawPayload().apply {
             decode(encoded)
         }
 
-        RECORDING.apply {
-            assertEquals(type, decoded.type)
-            assertEquals(mode, decoded.mode)
-            assertEquals(callId, decoded.callId)
+        RAW.apply {
             assertArrayEquals(payload, decoded.payload)
         }
     }
