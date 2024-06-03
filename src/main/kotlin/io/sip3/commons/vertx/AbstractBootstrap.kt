@@ -16,18 +16,19 @@
 
 package io.sip3.commons.vertx
 
+import com.newrelic.telemetry.micrometer.NewRelicRegistry
+import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
 import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig
+import io.micrometer.core.instrument.util.NamedThreadFactory
 import io.micrometer.elastic.ElasticConfig
 import io.micrometer.elastic.ElasticMeterRegistry
 import io.micrometer.influx.InfluxApiVersion
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxConsistency
 import io.micrometer.influx.InfluxMeterRegistry
-import io.micrometer.newrelic.NewRelicConfig
-import io.micrometer.newrelic.NewRelicMeterRegistry
 import io.micrometer.prometheus.HistogramFlavor
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
@@ -343,13 +344,17 @@ open class AbstractBootstrap : AbstractVerticle() {
 
             // New Relic
             meters.getJsonObject("new_relic")?.let { newRelic ->
-                val newRelicRegistry = NewRelicMeterRegistry(object : NewRelicConfig {
+                val newRelicRegistry = NewRelicRegistry.builder(object : NewRelicRegistryConfig {
                     override fun get(k: String) = null
                     override fun step() = newRelic.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun uri() = newRelic.getString("uri") ?: super.uri()
-                    override fun accountId() = newRelic.getString("account_id") ?: super.accountId()
                     override fun apiKey() = newRelic.getString("api_key") ?: super.apiKey()
-                }, Clock.SYSTEM)
+                    override fun serviceName() = newRelic.getString("service_name") ?: super.serviceName()
+                    override fun useLicenseKey() = newRelic.getBoolean("use_license_key") ?: super.useLicenseKey()
+                    override fun enableAuditMode() = newRelic.getBoolean("enable_audit_mode") ?: super.enableAuditMode()
+                }).build().apply {
+                    start(NamedThreadFactory("newrelic.micrometer.registry"))
+                }
                 registry.add(newRelicRegistry)
             }
         }
