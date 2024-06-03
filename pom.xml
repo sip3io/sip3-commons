@@ -17,6 +17,7 @@
     <properties>
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
     </properties>
+
     <dependencies>
         <!-- Vert.x -->
         <dependency>
@@ -71,7 +72,7 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.micrometer</groupId>
+            <groupId>com.newrelic.telemetry</groupId>
             <artifactId>micrometer-registry-new-relic</artifactId>
         </dependency>
 

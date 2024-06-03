@@ -323,7 +323,6 @@ class AbstractBootstrapTest : VertxTest() {
                         put("new_relic", JsonObject().apply {
                             put("uri", "http://127.0.0.1:$port")
                             put("step", 1000)
-                            put("account_id", "test")
                             put("api_key", "test")
                         })
                     })
