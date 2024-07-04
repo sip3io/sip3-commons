@@ -284,6 +284,7 @@ class AbstractBootstrapTest : VertxTest() {
                 vertx.deployTestVerticle(AbstractBootstrap::class, config = JsonObject().apply {
                     put("metrics", JsonObject().apply {
                         put("prometheus", JsonObject().apply {
+                            put("host", "127.0.0.1")
                             put("port", port)
                             put("step", 1000)
                         })
@@ -295,6 +296,7 @@ class AbstractBootstrapTest : VertxTest() {
                 vertx.setPeriodic(200) {
                     vertx.createHttpClient().request(RequestOptions().apply {
                         this.port = port
+                        uri = "http://127.0.0.1:$port/metrics"
                     }).onSuccess { request ->
                         request.send().onSuccess { response ->
                             if (response.statusCode() == 200) {
@@ -304,6 +306,8 @@ class AbstractBootstrapTest : VertxTest() {
                                     }
                                     context.completeNow()
                                 }
+                            } else {
+                                context.failNow(response.statusMessage())
                             }
                         }
                     }
