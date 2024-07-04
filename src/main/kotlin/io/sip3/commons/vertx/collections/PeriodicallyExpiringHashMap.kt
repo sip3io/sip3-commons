@@ -100,6 +100,10 @@ class PeriodicallyExpiringHashMap<K, V> private constructor(
         return objects.size
     }
 
+    fun values(): Collection<V> {
+        return objects.values
+    }
+
     fun clear() {
         expiringSlots.forEach { it.clear() }
         objectSlots.clear()

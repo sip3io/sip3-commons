@@ -16,23 +16,13 @@
 
 package io.sip3.commons.util
 
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
+import io.vertx.core.net.SocketAddress
+import java.net.URI
 
-class ResourceUtilKtTest {
-
-    @Test
-    fun `Validate 'readByteArray()' method`() {
-        val byteArray = readByteArray("/raw/hex-string")
-        assertEquals(4, byteArray.size)
-        assertArrayEquals(byteArrayOf(0x53, 0x49, 0x50, 0x33), byteArray)
-    }
-
-    @Test
-    fun `Validate 'readByteBuf()' method`() {
-        val byteBuf = readByteBuf("/raw/hex-string")
-        assertEquals(4, byteBuf.readableBytes())
-        assertArrayEquals(byteArrayOf(0x53, 0x49, 0x50, 0x33), byteBuf.getBytes())
-
+fun SocketAddress.toURI(scheme: String, removeTail: Boolean = true): URI {
+    return if (removeTail) {
+        URI(scheme, null, host().substringBefore("%"), port(), null, null, null)
+    } else {
+        URI(scheme, null, host(), port(), null, null, null)
     }
 }
