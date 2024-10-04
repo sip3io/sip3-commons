@@ -32,6 +32,9 @@ object MongoClient {
             put("connection_string", uri)
             put("db_name", db)
 
+            // Always use object_id
+            put("useObjectId", config.getBoolean("use_object_id") ?: true)
+
             // Auth
             config.getJsonObject("auth")?.let { auth ->
                 auth.getString("user")?.let {
