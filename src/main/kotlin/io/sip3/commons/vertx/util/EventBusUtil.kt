@@ -18,6 +18,7 @@ package io.sip3.commons.vertx.util
 
 import io.sip3.commons.vertx.util.EventBusUtil.USE_LOCAL_CODEC
 import io.vertx.core.AsyncResult
+import io.vertx.core.Future
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.Message
@@ -30,11 +31,16 @@ object EventBusUtil {
 }
 
 fun <T> EventBus.localRequest(address: String, message: Any, options: DeliveryOptions? = null, replyHandler: ((AsyncResult<Message<T>>) -> Unit)) {
+    localRequest<T>(address, message, options).onComplete(replyHandler)
+}
+
+fun <T> EventBus.localRequest(address: String, message: Any, options: DeliveryOptions? = null): Future<Message<T>> {
     options?.apply {
         codecName = "local"
         isLocalOnly = true
     }
-    request(address, message, options ?: USE_LOCAL_CODEC, replyHandler)
+
+    return request(address, message, options ?: USE_LOCAL_CODEC)
 }
 
 fun EventBus.localSend(address: String, message: Any, options: DeliveryOptions? = null) {
