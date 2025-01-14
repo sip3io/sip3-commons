@@ -61,6 +61,7 @@ import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
 import java.time.Duration
+import java.util.jar.Manifest
 import kotlin.coroutines.CoroutineContext
 
 open class AbstractBootstrap : AbstractVerticle() {
@@ -73,6 +74,12 @@ open class AbstractBootstrap : AbstractVerticle() {
     }
 
     open val configLocations = listOf("config.location")
+    open val manifestAttributes = mutableMapOf<String, String>().apply {
+        put("Project-Name", "project")
+        put("Maven-Version", "version")
+        put("Build-Timestamp", "built_at")
+        put("git_commit_id", "git_commit_id")
+    }
 
     open var scanPeriod = DEFAULT_SCAN_PERIOD
 
@@ -105,7 +112,6 @@ open class AbstractBootstrap : AbstractVerticle() {
                         if (!config.containsKebabCase()) {
                             return@map config
                         }
-
                         logger.warn { "Config contains keys in `kebab-case`." }
                         return@map config.toSnakeCase()
                     }
@@ -115,6 +121,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                         vertx.closeAndExitProcess()
                     }
                     .onSuccess { config ->
+                        addManifestAttrs(config)
                         logger.info("Configuration:\n ${config.encodePrettily()}")
                         deployMeterRegistries(config)
                         GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
@@ -124,6 +131,7 @@ open class AbstractBootstrap : AbstractVerticle() {
 
                 configRetriever.listen { change ->
                     val config = change.newConfiguration.toSnakeCase()
+                    addManifestAttrs(config)
                     logger.info("Configuration changed:\n ${config.encodePrettily()}")
                     vertx.eventBus().localPublish(Routes.config_change, config)
                 }
@@ -209,6 +217,22 @@ open class AbstractBootstrap : AbstractVerticle() {
 
                 return@map stores
             }
+    }
+
+    open fun addManifestAttrs(config: JsonObject) {
+        try {
+            this.javaClass.classLoader.getResources("META-INF/MANIFEST.MF")?.nextElement()?.openStream()
+                ?.use { Manifest(it).mainAttributes }
+                ?.let { attrs ->
+                    manifestAttributes.forEach { (key, mapped) ->
+                        attrs.getValue(key)?.let {
+                            config.put(mapped, it)
+                        }
+                    }
+                }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to read manifest." }
+        }
     }
 
     open fun deployMeterRegistries(config: JsonObject) {
