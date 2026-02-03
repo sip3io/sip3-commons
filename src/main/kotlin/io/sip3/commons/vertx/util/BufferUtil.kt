@@ -16,24 +16,16 @@
 
 package io.sip3.commons.vertx.util
 
-import io.vertx.core.Vertx
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.eventbus.MessageCodec
-import kotlin.system.exitProcess
+import io.vertx.core.internal.buffer.BufferInternal
+import kotlin.reflect.KClass
 
-fun Vertx.registerLocalCodec() {
-    eventBus().unregisterCodec("local")
-    eventBus().registerCodec(object : MessageCodec<Any, Any> {
-        override fun decodeFromWire(pos: Int, buffer: Buffer?) = throw NotImplementedError()
-        override fun encodeToWire(buffer: Buffer?, s: Any?) = throw NotImplementedError()
-        override fun transform(s: Any?) = s
-        override fun name() = "local"
-        override fun systemCodecID(): Byte = -1
-    })
+fun Buffer.byteBuf(): ByteBuf {
+    return (this as? BufferInternal)?.byteBuf ?: Unpooled.wrappedBuffer(this.bytes)
 }
 
-fun Vertx.closeAndExitProcess(code: Int = -1) {
-    close().onComplete {
-        exitProcess(code)
-    }
+fun KClass<Buffer>.buffer(byteBuf: ByteBuf): Buffer {
+    return BufferInternal.buffer(byteBuf)
 }

@@ -18,6 +18,7 @@ package io.sip3.commons.vertx
 
 import com.newrelic.telemetry.micrometer.NewRelicRegistry
 import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.logging.LoggingMeterRegistry
@@ -29,9 +30,8 @@ import io.micrometer.influx.InfluxApiVersion
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxConsistency
 import io.micrometer.influx.InfluxMeterRegistry
-import io.micrometer.prometheus.HistogramFlavor
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.micrometer.statsd.StatsdConfig
 import io.micrometer.statsd.StatsdFlavor
 import io.micrometer.statsd.StatsdMeterRegistry
@@ -57,10 +57,10 @@ import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.micrometer.backends.BackendRegistries
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import mu.KotlinLogging
 import org.reflections.ReflectionUtils
 import org.reflections.Reflections
 import java.time.Duration
+import java.util.Properties
 import java.util.jar.Manifest
 import kotlin.coroutines.CoroutineContext
 
@@ -122,7 +122,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                     }
                     .onSuccess { config ->
                         addManifestAttrs(config)
-                        logger.info("Configuration:\n ${config.encodePrettily()}")
+                        logger.info { "Configuration:\n ${config.encodePrettily()}" }
                         deployMeterRegistries(config)
                         GlobalScope.launch(vertx.dispatcher() as CoroutineContext) {
                             deployVerticles(config)
@@ -354,12 +354,14 @@ open class AbstractBootstrap : AbstractVerticle() {
                     override fun get(k: String) = null
                     override fun step() = prometheus.getLong("step")?.let { Duration.ofMillis(it) } ?: super.step()
                     override fun descriptions() = prometheus.getBoolean("descriptions") ?: super.descriptions()
-                    override fun histogramFlavor(): HistogramFlavor {
-                        val flavour = prometheus.getString("histogram_flavour") ?: return HistogramFlavor.Prometheus
+                    override fun prometheusProperties(): Properties? {
+                        val properties = prometheus.getJsonObject("properties")?.map ?: emptyMap()
                         return try {
-                            HistogramFlavor.valueOf(flavour)
+                            Properties().apply {
+                                putAll(properties)
+                            }
                         } catch (e: Exception) {
-                            HistogramFlavor.Prometheus
+                            Properties()
                         }
                     }
                 })
