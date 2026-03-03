@@ -1,12 +1,12 @@
 package io.sip3.commons.micrometer.prometheus
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Metrics
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
 import io.sip3.commons.vertx.util.closeAndExitProcess
 import io.vertx.core.AbstractVerticle
-import mu.KotlinLogging
 
 @Instance(singleton = true)
 @ConditionalOnProperty("/metrics/prometheus")
@@ -33,11 +33,10 @@ class PrometheusHttpServer : AbstractVerticle() {
 
         vertx.createHttpServer().requestHandler { req ->
             req.response().end(registry.scrape())
-        }.listen(port, addr) { asr ->
-            if (asr.failed()) {
-                logger.error(asr.cause()) { "PrometheusHttpServer 'start()' failed." }
+        }.listen(port, addr)
+            .onFailure { e ->
+                logger.error(e) { "PrometheusHttpServer 'start()' failed." }
                 vertx.closeAndExitProcess()
             }
-        }
     }
 }

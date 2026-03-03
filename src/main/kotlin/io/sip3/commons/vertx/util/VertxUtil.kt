@@ -33,5 +33,7 @@ fun Vertx.registerLocalCodec() {
 }
 
 fun Vertx.closeAndExitProcess(code: Int = -1) {
-    close { exitProcess(code) }
+    close().onComplete {
+        exitProcess(code)
+    }
 }

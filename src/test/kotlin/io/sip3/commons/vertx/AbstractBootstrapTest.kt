@@ -237,11 +237,10 @@ class AbstractBootstrapTest : VertxTest() {
             },
             assert = {
                 val socket = vertx.createDatagramSocket(DatagramSocketOptions())
-                socket.listen(port, "0.0.0.0") { connection ->
-                    if (connection.succeeded()) {
+                socket.listen(port, "0.0.0.0")
+                    .onSuccess {
                         socket.handler { context.completeNow() }
                     }
-                }
             },
             cleanup = this::removeRegistries
         )

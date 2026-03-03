@@ -98,7 +98,7 @@
 
         <!-- Logging -->
         <dependency>
-            <groupId>io.github.microutils</groupId>
+            <groupId>io.github.oshai</groupId>
             <artifactId>kotlin-logging-jvm</artifactId>
         </dependency>
         <dependency>
@@ -112,10 +112,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.sip3</groupId>
-            <artifactId>logback-webhook-appender</artifactId>
         </dependency>
 
         <!-- Test -->
