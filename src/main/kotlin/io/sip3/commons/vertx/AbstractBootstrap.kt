@@ -37,6 +37,7 @@ import io.micrometer.statsd.StatsdFlavor
 import io.micrometer.statsd.StatsdMeterRegistry
 import io.micrometer.statsd.StatsdProtocol
 import io.sip3.commons.Routes
+import io.sip3.commons.util.BootstrapDeployment
 import io.sip3.commons.vertx.annotations.ConditionalOnProperty
 import io.sip3.commons.vertx.annotations.Instance
 import io.sip3.commons.vertx.util.*
@@ -84,6 +85,7 @@ open class AbstractBootstrap : AbstractVerticle() {
     open var scanPeriod = DEFAULT_SCAN_PERIOD
 
     override fun start() {
+        logger.debug { "Start bootstrapping ${BootstrapDeployment.id()}" }
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
         // Define `local` codec to avoid serialization costs within the application.
         vertx.registerLocalCodec()
@@ -132,7 +134,7 @@ open class AbstractBootstrap : AbstractVerticle() {
                 configRetriever.listen { change ->
                     val config = change.newConfiguration.toSnakeCase()
                     addManifestAttrs(config)
-                    logger.info("Configuration changed:\n ${config.encodePrettily()}")
+                    logger.info { "Configuration changed:\n ${config.encodePrettily()}" }
                     vertx.eventBus().localPublish(Routes.config_change, config)
                 }
             }
