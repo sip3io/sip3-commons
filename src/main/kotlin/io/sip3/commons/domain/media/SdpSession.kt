@@ -32,4 +32,8 @@ open class SdpSession {
     fun codec(payloadType: Int): Codec? {
         return codecs.firstOrNull { it.payloadTypes.contains(payloadType) }
     }
+
+    override fun toString(): String {
+        return "SdpSession(src=$src, dst=$dst, codecs=${codecs.map { it.name }})"
+    }
 }

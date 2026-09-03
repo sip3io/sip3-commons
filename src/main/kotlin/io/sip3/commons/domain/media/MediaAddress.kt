@@ -39,4 +39,8 @@ class MediaAddress {
     val rtcpId by lazy {
         MediaUtil.sdpSessionId(addr, rtcpPort)
     }
+
+    override fun toString(): String {
+        return "MediaAddress(addr=$addr, rtpPort=$rtpPort, rtcpPort=$rtcpPort)"
+    }
 }

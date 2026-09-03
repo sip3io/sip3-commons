@@ -39,4 +39,8 @@ open class MediaControl {
     lateinit var sdpSession: SdpSession
 
     var recording: Recording? = null
+
+    override fun toString(): String {
+        return "MediaControl(callId=$callId, caller=$caller, callee=$callee, sdpSession=$sdpSession, recording=$recording)"
+    }
 }
