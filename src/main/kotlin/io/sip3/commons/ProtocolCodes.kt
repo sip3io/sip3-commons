@@ -41,4 +41,7 @@ object ProtocolCodes {
 
     // RTP Event (Internal SIP3 protocol)
     const val RTPE: Byte = 8
+
+    // NG Control Protocol
+    const val NGCP: Byte = 9
 }

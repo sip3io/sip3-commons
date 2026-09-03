@@ -30,5 +30,9 @@ open class Recording {
     }
 
     var mode: Byte = FULL
+
+    override fun toString(): String {
+        return "Recording(mode=$mode)"
+    }
 }
 
