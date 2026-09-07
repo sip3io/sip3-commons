@@ -18,11 +18,26 @@ package io.sip3.commons.micrometer
 
 import io.micrometer.core.instrument.*
 import io.micrometer.core.instrument.Metrics
+import io.vertx.core.Vertx
 
 object Metrics {
 
+    private val aggregatingCounters = mutableMapOf<String, AggregatingCounter>()
+
     fun counter(name: String, attributes: Map<String, Any> = emptyMap()): Counter {
         return Metrics.counter(name, tagsOf(attributes))
+    }
+
+    fun counter(vertx: Vertx, name: String, attributes: Map<String, Any> = emptyMap()): Counter {
+        return vertx.orCreateContext.config()
+            ?.getJsonObject("metrics")
+            ?.getLong("aggregation_delay")
+            ?.let { aggregationDelay ->
+                val key = aggregatingCounterKey(name, attributes)
+                aggregatingCounters.getOrPut(key) {
+                    AggregatingCounter(name, vertx, aggregationDelay, attributes)
+                }
+            } ?: counter(name, attributes)
     }
 
     fun summary(name: String, attributes: Map<String, Any> = emptyMap()): DistributionSummary {
@@ -37,5 +52,9 @@ object Metrics {
         val tags = mutableListOf<Tag>()
         attributes.forEach { (k, v) -> tags.add(ImmutableTag(k, v.toString())) }
         return tags
+    }
+
+    private fun aggregatingCounterKey(name: String, attributes: Map<String, Any> = emptyMap()): String {
+        return "$name:${attributes.map {"${it.key}:${it.value}"}}"
     }
 }
