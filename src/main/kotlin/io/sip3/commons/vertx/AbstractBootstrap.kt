@@ -86,6 +86,9 @@ open class AbstractBootstrap : AbstractVerticle() {
 
     override fun start() {
         logger.debug { "Start bootstrapping ${BootstrapDeployment.id()}" }
+
+        if (vertx.isNativeTransportEnabled) logger.info { "Native transport is enabled" }
+
         // By design Vert.x has default codecs for byte arrays, strings and JSON objects only.
         // Define `local` codec to avoid serialization costs within the application.
         vertx.registerLocalCodec()
