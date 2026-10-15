@@ -16,6 +16,8 @@
 
 package io.sip3.commons.util
 
+import java.nio.charset.Charset
+
 fun String.toIntRange(): IntRange {
     val values = this.split("..")
     if (values.size == 2) {
@@ -23,4 +25,17 @@ fun String.toIntRange(): IntRange {
     }
 
     throw IllegalArgumentException("Invalid IntRange: '$this'")
+}
+
+fun String.readHexBytes(): ByteArray {
+    return this.chunked(2)
+        .map { it.toInt(16).toByte() }
+        .toByteArray()
+}
+
+fun String.fromHexString(charset: Charset = Charset.defaultCharset()): String {
+    return this.chunked(2)
+        .map { it.toInt(16).toByte() }
+        .toByteArray()
+        .let { String(it, charset) }
 }
